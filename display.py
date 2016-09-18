@@ -58,8 +58,8 @@ class ProjectionViewer:
         self.width = width
         self.height = height
         self.screen = pygame.display.set_mode((width, height))
-        pygame.display.set_caption('Wireframe Display')
-        self.background = (10,10,50)
+        pygame.display.set_caption('Display')
+        self.background = (2,2,2)
 
         self.wireframes = {}
         self.displayNodes = True
@@ -67,13 +67,14 @@ class ProjectionViewer:
         self.nodeColour = (255,255,255)
         self.edgeColour = (200,200,200)
         self.nodeRadius = 4
-        self.objects = {'essai':[(0,3,5), (5,3,5), (5,5,5), (0,5,5)]}
+        self.objects = {}
 
         self.clock = pygame.time.Clock()
         self.frametime = 0
         self.font = pygame.font.SysFont(pygame.font.get_default_font(), 20)
 
         #position (x,y,z) dans le plan de la carte y = altitude (left handed system)
+        # orientation nulle = regard vers z
         """
         y  z
         | /
@@ -81,7 +82,7 @@ class ProjectionViewer:
 
         le plan xz est le sol
         """
-        self.eyepoint = np.array([0, 2, 0])
+        self.eyepoint = np.array([0, 1, 0])
         self.camera = np.array([0, 2, 0])
         # rotation angle en radian
         self.orientation = np.array([0, 0, 0])
@@ -92,10 +93,9 @@ class ProjectionViewer:
         # d = screen width / 2*tan(135)
         self.distancefocale = self.width / abs(2 * math.tan(PI*135/180))
 
-    def addWireframe(self, name, wireframe):
-        """ Add a named wireframe object. """
-
-        self.wireframes[name] = wireframe
+    def addobject(self, name, obj):
+        """ Add a named object. """
+        self.objects[name] = obj
 
     def computespeed(self):
         # speed modifiers
@@ -132,33 +132,43 @@ class ProjectionViewer:
         for obj in self.objects:
             newpoints = []
             for point in self.objects[obj]:
-                ax = point[0]
-                ay = point[1]
-                az = point[2]
                 camera = self.eyepoint
-                print 'point:',point
-                print 'camera:',camera
-                print 'point - camera:',point - camera
+                #print 'point:',point
+                #print 'camera:',camera
+                #print 'point - camera:',point - camera
                 d = cameratransform(point - camera, self.orientation)
-                print 'd:',d
-                ez = self.distancefocale
-                b1 = d[0] * ez / d[2]
-                b2 = d[1] * ez / d[2]
-                print 'result:',(b1,b2)
+                #print 'd:',d
+                displaysurface = [0, 0 , self.distancefocale]
+                # we have to rotate surface to calculate ex, ey, ez
+                ex ,ey ,ez = np.dot(rotateYMatrix(self.orientation[1]), displaysurface)
+                #print 'exyz:', self.orientation[1], (ex,ey,ez)
+                b1 = d[0] * ez / d[2] - ex
+                b2 = d[1] * ez / d[2] - ey
+                #print 'result:',(b1,b2)
                 newpoints.append((b1, b2))
             screennewpoints = self.toscreencoord(newpoints)
-            print screennewpoints
+            #print screennewpoints
             pygame.draw.polygon(self.screen, (255,0,0), self.toscreencoord(newpoints) )
-            #pour verification
-            theorie = [(10/5, 0),(15/5, 0),(15/5,3./5),(10/5,3./5)]
-            attendu = self.toscreencoord(theorie, 100)
-            pygame.draw.polygon(self.screen, (0,255,0), attendu)
 
     def toscreencoord(self, points, scale=1):
         result = []
         for point in points:
-            a = (float(point[0])* float(scale) + self.width/2) 
-            b = (self.height - float(point[1])* float(scale)) 
+            try:
+                a = int(float(point[0])* float(scale) + self.width/2 +.5)
+            except OverflowError:
+                a = self.width
+            if a<0:
+                a = 0
+            if a > self.width:
+                a = self.width
+            try:
+                b = int(self.height - float(point[1])* float(scale) +.5)
+            except OverflowError:
+                b = self.height
+            if b<0:
+                b = 0
+            if b > self.height:
+                a = self.height
             result.append((a,b))
         return result
     
@@ -174,9 +184,9 @@ class ProjectionViewer:
    
 
     def move(self, dir):
-        theta = self.orientation[0]
+        theta = self.orientation[1]
         d = 1
-        md = np.array([dir*d*np.cos(theta), 0, dir*d*np.sin(theta)])
+        md = np.array([dir*d*np.sin(theta), 0, dir*d*np.cos(theta)])
         self.eyepoint = md + self.eyepoint
 
     def rotate(self, dir):
@@ -187,12 +197,24 @@ class ProjectionViewer:
 
 if __name__ == '__main__':
     pygame.init()
+    pygame.key.set_repeat(100,100)
     pv = ProjectionViewer(800, 600)
 
-    cube = wf.Wireframe()
-    cube_nodes = [(x,y,z) for x in (50,250) for y in (50,250) for z in (50,250)]
-    cube.addNodes(np.array(cube_nodes))
-    cube.addEdges([(n,n+4) for n in range(0,4)]+[(n,n+1) for n in range(0,8,2)]+[(n,n+2) for n in (0,1,4,5)])
+    h= 2
+    l = 20
+    L = 50
+    northwall = [(-L/2,0,l/2), (L/2,0,l/2), (L/2,h,l/2), (-L/2,h,l/2) ]
+    eastwall = []
+    southwall = []
+    westwall = []
+    for p in northwall:
+        eastwall.append(np.dot(rotateYMatrix(-PI/2), p))
+        southwall.append(np.dot(rotateYMatrix(-PI), p))
+        westwall.append(np.dot(rotateYMatrix(PI/2), p))
     
-    pv.addWireframe('cube', cube)
+    print northwall
+    pv.addobject('northwall', northwall)
+    pv.addobject('eastwall', eastwall)
+    pv.addobject('southwall', southwall)
+    pv.addobject('westwall', westwall)
     pv.run()
