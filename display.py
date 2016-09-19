@@ -140,7 +140,7 @@ class ProjectionViewer:
                 #print 'd:',d
                 displaysurface = [0, 0 , self.distancefocale]
                 # we have to rotate surface to calculate ex, ey, ez
-                ex ,ey ,ez = np.dot(rotateYMatrix(self.orientation[1]), displaysurface)
+                ex ,ey ,ez = displaysurface #np.dot(rotateYMatrix(self.orientation[1]), displaysurface)
                 #print 'exyz:', self.orientation[1], (ex,ey,ez)
                 b1 = d[0] * ez / d[2] - ex
                 b2 = d[1] * ez / d[2] - ey
@@ -157,18 +157,18 @@ class ProjectionViewer:
                 a = int(float(point[0])* float(scale) + self.width/2 +.5)
             except OverflowError:
                 a = self.width
-            if a<0:
+            """if a<0:
                 a = 0
             if a > self.width:
-                a = self.width
+                a = self.width"""
             try:
-                b = int(self.height - float(point[1])* float(scale) +.5)
+                b = int(self.height/2 - float(point[1])* float(scale) +.5)
             except OverflowError:
                 b = self.height
-            if b<0:
+            """if b<0:
                 b = 0
             if b > self.height:
-                a = self.height
+                a = self.height"""
             result.append((a,b))
         return result
     
@@ -186,7 +186,7 @@ class ProjectionViewer:
     def move(self, dir):
         theta = self.orientation[1]
         d = 1
-        md = np.array([dir*d*np.sin(theta), 0, dir*d*np.cos(theta)])
+        md = np.array([-dir*d*np.sin(theta), 0, dir*d*np.cos(theta)])
         self.eyepoint = md + self.eyepoint
 
     def rotate(self, dir):
@@ -214,7 +214,7 @@ if __name__ == '__main__':
     
     print northwall
     pv.addobject('northwall', northwall)
-    pv.addobject('eastwall', eastwall)
-    pv.addobject('southwall', southwall)
-    pv.addobject('westwall', westwall)
+    #pv.addobject('eastwall', eastwall)
+    #pv.addobject('southwall', southwall)
+    #pv.addobject('westwall', westwall)
     pv.run()
