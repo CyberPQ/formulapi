@@ -38,12 +38,6 @@ if __name__ == '__main__':
             if key == 'down':
                 speed -= .2
 
-            #strafe left / right
-            if key == 'a' or key == 'd':
-                move = vector(-0.5,0,0)
-                if key == 'd':
-                    move = vector(0.5,0,0)
-                scene.center = scene.center+move
             #look left / right
             if key == 'left' or key == 'right':
                 ray = 0
@@ -54,9 +48,3 @@ if __name__ == '__main__':
                 scene.center = scene.mouse.camera+newforward*mag(scene.center-scene.mouse.camera)
                 scene.forward = newforward
                 scene.center = scene.center+scene.forward*ray/2.
-            #move up / down
-            if key == 'f' or key == 'v':
-                move = vector(0,-0.5,0)
-                if s == 'v':
-                    move = vector(0,0.5,0)
-                scene.center = scene.center+move
