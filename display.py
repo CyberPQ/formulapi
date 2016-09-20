@@ -1,6 +1,7 @@
 import numpy
 import math
 import time
+import sys
 
 import pygame
 from pygame.locals import *
@@ -26,8 +27,9 @@ install these .whl files for 32 bits:
 
 """
 
-
-terrain = ((-50,-1,50),(-50,-1,-50),(50,-1,-50),(50,-1,50))
+H = -1
+terrain = ((-50,H,50),(-50,H,-50),(50,H,-50),(50,H,50))
+terraintex = ((0.0, 0.0),(1.0, 0.0),(1.0, 1.0),(0.0, 1.0))
 
 vertices = (
     (1, -1, -1),
@@ -67,32 +69,51 @@ def glut_print( x,  y,  font,  text, r,  g , b , a):
     if not blending :
         glDisable(GL_BLEND) 
 
+def drawText(x, y, text):                                                
+    position = (x, y, 0)                                                       
+    font = pygame.font.Font(None, 64)                                          
+    textSurface = font.render(text, True, (255,255,255,255),                   
+                              (0,0,0,255))                                     
+    textData = pygame.image.tostring(textSurface, "RGBA", True)                
+    glRasterPos3d(*position)                                                
+    glDrawPixels(textSurface.get_width(), textSurface.get_height(),         
+                    GL_RGBA, GL_UNSIGNED_BYTE, textData)
+
+
+class Texture(object):
+# simple texture class
+# designed for 32 bit png images (with alpha channel)
+    def __init__(self,fileName):
+        self.texid=0
+        self.LoadTexture(fileName)
+    def LoadTexture(self,fileName):
+        textureSurface = pygame.image.load(fileName)
+        textureData = pygame.image.tostring(textureSurface, "RGBA", 0)
+        pygame.image.save(textureSurface,'export.png')
+
+        self.texid=glGenTextures(1)
+
+        glEnable(GL_TEXTURE_2D)
+        glBindTexture(GL_TEXTURE_2D, self.texid)
+        glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,GL_LINEAR)
+        glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,GL_LINEAR)
+        
+        glTexImage2D( GL_TEXTURE_2D, 0, GL_RGBA,
+                    textureSurface.get_width(), textureSurface.get_height(),
+                    0, GL_RGBA, GL_UNSIGNED_BYTE, textureData )
+        glDisable(GL_TEXTURE_2D)
+
+    def __del__(self):
+        glDeleteTextures(self.texid)
+
 
 class Camera(object):
 
     def __init__(self):
         self.pos = [0,0,0]
         self.rot = [0,0,0]
-
-    def update(self):
-        yaw = math.radians(-self.rot[1])
-
-        dx,dz = math.sin(yaw),math.cos(yaw)
         
-        pressed = pygame.key.get_pressed()
-        if pressed[K_UP]:
-            self.pos[0] += dx
-            self.pos[2] -= dz
-
-        if pressed[K_DOWN]:
-            self.pos[0] -= dx
-            self.pos[2] += dz
-
-        if pressed[K_LEFT]:
-            self.rot[1] += 10
-
-        if pressed[K_RIGHT]:
-            self.rot[1] -= 10
+        
 
 class Main(object):
     WIDTH = 600
@@ -114,82 +135,103 @@ class Main(object):
 
         glMatrixMode(GL_MODELVIEW)
         glLoadIdentity()
-
-    def view2d(self):
-        glMatrixMode(GL_PROJECTION)
-        glLoadIdentity()
-        gluOrtho2D(0.0, 1.0, 0.0, 1.0)
-        glMatrixMode(GL_MODELVIEW)
-
-        glut_print( 10 , 10 , GLUT_BITMAP_9_BY_15 , "Hallo World" , 1.0 , 1.0 , 1.0 , 1.0 )
-
+        glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT)
 
     def startup(self):
         pygame.init()
         self.clock = pygame.time.Clock()
         pygame.display.set_mode((self.WIDTH,self.HEIGHT), DOUBLEBUF|OPENGL)
         pygame.display.set_caption('OpenGL window')
-        glutInit()
+        #glutInit()
         glClearColor(0.5,0.7,1, 1.0)
 
-        glEnable(GL_DEPTH_TEST)
+        glEnable(GL_DEPTH_TEST) 
+
+        self.piste = Texture('piste2.png')
     
+    def draw(self):
+        """glBegin(GL_QUADS)
+        i = 0
+        for face in faces:
+            glColor3fv(colours[i])
+            for vertex in face:
+                glVertex3fv(vertices[vertex])
+            i += 1
+        glEnd()"""
+
+        #sol
+        glEnable(GL_TEXTURE_2D)
+        glBindTexture(GL_TEXTURE_2D,self.piste.texid)
+        glBegin(GL_QUADS)
+        glColor3fv((1,1,1))
+        for i, vertex in enumerate(terrain):
+            glTexCoord2f(*terraintex[i])
+            glVertex3fv(vertex)
+    
+        glEnd()
+        glDisable(GL_TEXTURE_2D)
+
     def __init__(self):
         self.running = True
         self.lock = True
+        self.speed = 0
         
         self.startup()
 
         self.camera = Camera()
 
+    def update_camera(self):
+        rot = self.camera.rot
+        glRotatef(-rot[0],1,0,0)
+        glRotatef(-rot[1],0,1,0)
+        x,y,z = self.camera.pos
+        glTranslatef(-x,-y,-z)
+    
     def run(self):
         while self.running:
             self.clock.tick(60)
-            glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT)
-            self.view2d()
 
-            self.view3d()
-            
-            #self.lock_mouse()
-            
             self.checkForInput()
-
+            self.move()
+            #debut nouvelle frame 
+            self.view3d()
             glPushMatrix()
-            rot = self.camera.rot
-            glRotatef(-rot[0],1,0,0)
-            glRotatef(-rot[1],0,1,0)
-            x,y,z = self.camera.pos
-            glTranslatef(-x,-y,-z)
-
-            glBegin(GL_QUADS)
-            i = 0
-            for face in faces:
-                glColor3fv(colours[i])
-                for vertex in face:
-                    glVertex3fv(vertices[vertex])
-                i += 1
-            glEnd()
-
-            glBegin(GL_QUADS)
-            for vertex in terrain:
-                glColor3fv((0,0.25,0))
-                glVertex3fv(vertex)
-        
-            glEnd()
-            
-
+            self.update_camera()
+            #drawText(5,5,'testfklsfklskflskflsdfksdlfkdslfklsm')
+            self.draw()
             glPopMatrix()
             pygame.display.flip()
-            pygame.time.wait(15)
-            
+
+    def move(self):
+        yaw = math.radians(-self.camera.rot[1])
+
+        if self.speed != 0:
+            dx,dz = self.speed*math.sin(yaw), self.speed*math.cos(yaw)
+            self.camera.pos[0] += dx
+            self.camera.pos[2] -= dz
+
+
     def checkForInput(self):
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 self.running = False
-            elif event.type == pygame.KEYDOWN and event.key == K_ESCAPE:
-                self.lock = False
-        #update camera position with pressed keys
-        self.camera.update()
+            elif event.type == pygame.KEYDOWN:
+                if event.key == K_ESCAPE:
+                    self.lock = False
+                if event.key == K_UP:
+                    self.speed += .1
+                if event.key == K_DOWN:
+                    self.speed -= .1
+                if event.key == K_SPACE:
+                    self.speed = 0
+        #process pressed keys
+        pressed = pygame.key.get_pressed()
+
+        if pressed[K_LEFT]:
+            self.camera.rot[1] += 1
+
+        if pressed[K_RIGHT]:
+            self.camera.rot[1] -= 1
 
 if __name__ == '__main__':
     view = Main()
