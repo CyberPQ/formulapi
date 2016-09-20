@@ -24,7 +24,6 @@ install these .whl files for 32 bits:
     pip install PyOpenGL-3.1.1-cp27-cp27m-win32.whl 
     pip install PyOpenGL_accelerate-3.1.1-cp27-cp27m-win32.whl
 
-
 """
 
 H = -1
