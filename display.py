@@ -6,6 +6,7 @@ import threading
 import BaseHTTPServer
 import httpserver
 import imagebuffer
+import motor
 
 import pygame
 from pygame.locals import *
@@ -225,11 +226,11 @@ class Main(object):
                 if event.key == K_ESCAPE:
                     self.lock = False
                 if event.key == K_UP:
-                    self.speed += .1
+                    motor.add_speed(.1, .1)
                 if event.key == K_DOWN:
-                    self.speed -= .1
+                    motor.add_speed(-.1, -.1)
                 if event.key == K_SPACE:
-                    self.speed = 0
+                    motor.set_speed(.0, .0)
                 if event.key == K_p:
                     self.capture = not self.capture
                     print 'capture:', self.capture

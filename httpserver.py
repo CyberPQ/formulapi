@@ -10,7 +10,7 @@ import os
 import posixpath
 import BaseHTTPServer
 import urllib
-import urlparse
+from urlparse import urlparse, parse_qs
 import cgi
 import sys
 import shutil
@@ -19,6 +19,7 @@ from PIL import Image
 import datetime
 
 import imagebuffer
+import motor
 
 try:
     from cStringIO import StringIO
@@ -52,7 +53,7 @@ class RequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
         None, in which case the caller has nothing further to do.
 
         """
-        path = self.translate_path(self.path)
+        path, query = self.translate_path(self.path)
         if path == '/capture.png':
             if imagebuffer.width > 0:
                 print datetime.datetime.now(),'start capture'
@@ -72,6 +73,14 @@ class RequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
                 self.wfile.write(pseudofile.getvalue())
                 pseudofile.close()
                 print datetime.datetime.now(),'fin response'
+        elif path == '/motorcontrol':
+            print query
+            try:
+                motor.set_speed(float(query['left'][0]), float(query['right'][0]))
+            except KeyError:
+                motor.set_speed(.0,.0)
+
+            self.send_response(200)
         else:
             self.send_error(404, "File not found")
 
@@ -80,11 +89,13 @@ class RequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
     def translate_path(self, path):
         """Translate a /-separated PATH
         """
+        query_components = parse_qs(urlparse(path).query)
+
         # abandon query parameters
         path = path.split('?',1)[0]
-        path = path.split('#',1)[0]
+        path = path.split('#',1)[0] 
         
-        return path
+        return path, query_components
 
     def copyfile(self, source, outputfile):
         """Copy all data between two file objects.
