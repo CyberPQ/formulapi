@@ -15,8 +15,10 @@ import cgi
 import sys
 import shutil
 import mimetypes
+from PIL import Image
+import datetime
 
-from display import imagebuffer
+import imagebuffer
 
 try:
     from cStringIO import StringIO
@@ -27,8 +29,6 @@ except ImportError:
 class RequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
 
     """Simple HTTP request handler with GET and HEAD commands.
-
-
     """
 
     server_version = "SimpleHTTP/version"
@@ -54,14 +54,24 @@ class RequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
         """
         path = self.translate_path(self.path)
         if path == '/capture.png':
-            global imagebuffer
-            self.send_response(200)
-            self.send_header('Content-Type','image/png')
-            self.send_header('Content-Length',imagebuffer.len)
-            self.end_headers()
-            # Send the html message
-            print imagebuffer.len
-            self.wfile.write(imagebuffer.getvalue())
+            if imagebuffer.width > 0:
+                print datetime.datetime.now(),'start capture'
+                # Send the html message
+                img = Image.fromstring(imagebuffer.mode, (imagebuffer.width,imagebuffer.height), imagebuffer.data)
+                pseudofile = StringIO()
+                print datetime.datetime.now(),'start png'
+                img.save(pseudofile,'PNG')
+                pseudofile.seek(0, os.SEEK_END)
+                size = pseudofile.tell()
+                print datetime.datetime.now(),'fin capture'
+                #send response and data
+                self.send_response(200)
+                self.send_header('Content-Type', 'image/png')
+                self.send_header('Content-Length', size)
+                self.end_headers()
+                self.wfile.write(pseudofile.getvalue())
+                pseudofile.close()
+                print datetime.datetime.now(),'fin response'
         else:
             self.send_error(404, "File not found")
 

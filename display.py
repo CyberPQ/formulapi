@@ -5,9 +5,7 @@ import sys
 import threading
 import BaseHTTPServer
 import httpserver
-from StringIO import StringIO
-from PIL import Image
-import os
+import imagebuffer
 
 import pygame
 from pygame.locals import *
@@ -31,8 +29,6 @@ install these .whl files for 32 bits:
     pip install PyOpenGL_accelerate-3.1.1-cp27-cp27m-win32.whl
 
 """
-
-imagebuffer = StringIO()
 
 H = -1
 terrain = ((-50,H,50),(-50,H,-50),(50,H,-50),(50,H,50))
@@ -207,13 +203,10 @@ class Main(object):
             glPopMatrix()
             pygame.display.flip()
             if self.capture:
-                global imagebuffer
-                data = pygame.image.tostring(self.screen, 'RGBA')
-                img = Image.fromstring('RGBA', (self.WIDTH,self.HEIGHT), data)
-                imagebuffer.seek(0, os.SEEK_SET)
-                img.save(imagebuffer,'PNG')
-                print imagebuffer.len
-
+                imagebuffer.mode = 'RGBA'
+                imagebuffer.width = self.WIDTH
+                imagebuffer.height = self.HEIGHT
+                imagebuffer.data = pygame.image.tostring(self.screen, imagebuffer.mode, False)
 
     def move(self):
         yaw = math.radians(-self.camera.rot[1])
