@@ -2,6 +2,12 @@ import numpy
 import math
 import time
 import sys
+import threading
+import BaseHTTPServer
+import httpserver
+from StringIO import StringIO
+from PIL import Image
+import os
 
 import pygame
 from pygame.locals import *
@@ -25,6 +31,8 @@ install these .whl files for 32 bits:
     pip install PyOpenGL_accelerate-3.1.1-cp27-cp27m-win32.whl
 
 """
+
+imagebuffer = StringIO()
 
 H = -1
 terrain = ((-50,H,50),(-50,H,-50),(50,H,-50),(50,H,50))
@@ -88,7 +96,6 @@ class Texture(object):
     def LoadTexture(self,fileName):
         textureSurface = pygame.image.load(fileName)
         textureData = pygame.image.tostring(textureSurface, "RGBA", 0)
-        pygame.image.save(textureSurface,'export.png')
 
         self.texid=glGenTextures(1)
 
@@ -139,7 +146,7 @@ class Main(object):
     def startup(self):
         pygame.init()
         self.clock = pygame.time.Clock()
-        pygame.display.set_mode((self.WIDTH,self.HEIGHT), DOUBLEBUF|OPENGL)
+        self.screen = pygame.display.set_mode((self.WIDTH,self.HEIGHT), DOUBLEBUF|OPENGL)
         pygame.display.set_caption('OpenGL window')
         #glutInit()
         glClearColor(0.5,0.7,1, 1.0)
@@ -174,9 +181,8 @@ class Main(object):
         self.running = True
         self.lock = True
         self.speed = 0
-        
+        self.capture = False
         self.startup()
-
         self.camera = Camera()
 
     def update_camera(self):
@@ -200,6 +206,14 @@ class Main(object):
             self.draw()
             glPopMatrix()
             pygame.display.flip()
+            if self.capture:
+                global imagebuffer
+                data = pygame.image.tostring(self.screen, 'RGBA')
+                img = Image.fromstring('RGBA', (self.WIDTH,self.HEIGHT), data)
+                imagebuffer.seek(0, os.SEEK_SET)
+                img.save(imagebuffer,'PNG')
+                print imagebuffer.len
+
 
     def move(self):
         yaw = math.radians(-self.camera.rot[1])
@@ -223,6 +237,9 @@ class Main(object):
                     self.speed -= .1
                 if event.key == K_SPACE:
                     self.speed = 0
+                if event.key == K_p:
+                    self.capture = not self.capture
+                    print 'capture:', self.capture
         #process pressed keys
         pressed = pygame.key.get_pressed()
 
@@ -233,6 +250,19 @@ class Main(object):
             self.camera.rot[1] -= 1
 
 if __name__ == '__main__':
+    HOST, PORT = "localhost", 8000
+    server = BaseHTTPServer.HTTPServer((HOST, PORT), httpserver.RequestHandler)
+    # Start a thread with the server -- that thread will then start one
+    # more thread for each request
+    server_thread = threading.Thread(target=server.serve_forever)
+    # Exit the server thread when the main thread terminates
+    server_thread.daemon = True
+    server_thread.start()
+
     view = Main()
     view.run()
+
+    #close http server
+    server.shutdown()
+    server.server_close()
     quit()
