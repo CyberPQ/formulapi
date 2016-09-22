@@ -4,9 +4,11 @@ import time
 import sys
 import threading
 import BaseHTTPServer
+import SocketServer
 import httpserver
 import imagebuffer
-import motor
+import datetime
+from Robot import robot
 
 import pygame
 from pygame.locals import *
@@ -31,8 +33,13 @@ install these .whl files for 32 bits:
 
 """
 
-H = -1
-terrain = ((-50,H,50),(-50,H,-50),(50,H,-50),(50,H,50))
+#41.5mm
+hauteurcamera = 0.0415
+H = -hauteurcamera
+#10.3m par 6.6
+L1 = 10.3
+L2 = 6.6
+terrain = ((-L1/2.,H,L2/2.),(-L1/2.,H,-L2/2.),(L1/2.,H,-L2/2.),(L1/2.,H,L2/2.))
 terraintex = ((0.0, 0.0),(1.0, 0.0),(1.0, 1.0),(0.0, 1.0))
 
 vertices = (
@@ -134,7 +141,7 @@ class Main(object):
         glMatrixMode(GL_PROJECTION)
         glLoadIdentity()
 
-        gluPerspective(70,(self.WIDTH/self.HEIGHT),0.1,100)
+        gluPerspective(70,(self.WIDTH/self.HEIGHT),0.001,100)
 
         glMatrixMode(GL_MODELVIEW)
         glLoadIdentity()
@@ -184,6 +191,7 @@ class Main(object):
 
     def update_camera(self):
         rot = self.camera.rot
+        #print 'rotation:', rot[1]
         glRotatef(-rot[0],1,0,0)
         glRotatef(-rot[1],0,1,0)
         x,y,z = self.camera.pos
@@ -191,10 +199,10 @@ class Main(object):
     
     def run(self):
         while self.running:
-            self.clock.tick(60)
+            deltat = self.clock.tick(60) / 1000.
 
             self.checkForInput()
-            self.move()
+            self.move(deltat)
             #debut nouvelle frame 
             self.view3d()
             glPushMatrix()
@@ -204,18 +212,25 @@ class Main(object):
             glPopMatrix()
             pygame.display.flip()
             if self.capture:
-                imagebuffer.mode = 'RGBA'
+                imagebuffer.mode = 'RGB'
                 imagebuffer.width = self.WIDTH
                 imagebuffer.height = self.HEIGHT
                 imagebuffer.data = pygame.image.tostring(self.screen, imagebuffer.mode, False)
 
-    def move(self):
-        yaw = math.radians(-self.camera.rot[1])
-
-        if self.speed != 0:
-            dx,dz = self.speed*math.sin(yaw), self.speed*math.cos(yaw)
-            self.camera.pos[0] += dx
-            self.camera.pos[2] -= dz
+    def move(self, dt):
+        drot_radian, d = robot.get_deltarotation(dt)
+        #ajustement rotation
+        self.camera.rot[1] += math.degrees(drot_radian)
+        if self.camera.rot[1] > 360.:
+            self.camera.rot[1] -= 360.
+        if self.camera.rot[1] < -360.:
+            self.camera.rot[1] += 360.
+        #calcul nouvelle coordonnee
+        yaw = -math.radians(self.camera.rot[1])
+        dx = d*math.sin(yaw)
+        dz = d*math.cos(yaw)
+        self.camera.pos[0] += dx
+        self.camera.pos[2] -= dz
 
 
     def checkForInput(self):
@@ -226,26 +241,28 @@ class Main(object):
                 if event.key == K_ESCAPE:
                     self.lock = False
                 if event.key == K_UP:
-                    motor.add_speed(.1, .1)
+                    robot.add_speed(.4, .4)
                 if event.key == K_DOWN:
-                    motor.add_speed(-.1, -.1)
+                    robot.add_speed(-.4, -.4)
                 if event.key == K_SPACE:
-                    motor.set_speed(.0, .0)
+                    robot.set_speed(.0, .0)
+                if event.key == K_t:
+                    print datetime.datetime.now()
                 if event.key == K_p:
                     self.capture = not self.capture
                     print 'capture:', self.capture
-        #process pressed keys
-        pressed = pygame.key.get_pressed()
+                if event.key == K_LEFT:
+                    robot.add_speed(-.1,.1)
+                if event.key == K_RIGHT:
+                    robot.add_speed(.1,-.1)
 
-        if pressed[K_LEFT]:
-            self.camera.rot[1] += 1
 
-        if pressed[K_RIGHT]:
-            self.camera.rot[1] -= 1
+        
 
 if __name__ == '__main__':
     HOST, PORT = "localhost", 8000
-    server = BaseHTTPServer.HTTPServer((HOST, PORT), httpserver.RequestHandler)
+    #server = BaseHTTPServer.HTTPServer((HOST, PORT), httpserver.RequestHandler)
+    server = SocketServer.TCPServer((HOST, PORT), httpserver.MyTCPHandler)
     # Start a thread with the server -- that thread will then start one
     # more thread for each request
     server_thread = threading.Thread(target=server.serve_forever)

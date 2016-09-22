@@ -19,12 +19,45 @@ from PIL import Image
 import datetime
 
 import imagebuffer
-import motor
+from Robot import robot
 
 try:
     from cStringIO import StringIO
 except ImportError:
     from StringIO import StringIO
+
+
+import SocketServer
+
+class MyTCPHandler(SocketServer.BaseRequestHandler):
+    """
+    The request handler class for our server.
+
+    It is instantiated once per connection to the server, and must
+    override the handle() method to implement communication to the
+    client.
+    """
+
+    def handle(self):
+        # self.request is the TCP socket connected to the client
+        while True:
+            self.data = self.request.recv(1024).strip()
+            if self.data == '1':
+                print datetime.datetime.now(),'start capture'
+                # Send the html message
+                #img = Image.fromstring(imagebuffer.mode, (imagebuffer.width,imagebuffer.height), imagebuffer.data)
+                #pseudofile = StringIO()
+                print datetime.datetime.now(),'start png'
+                #img.save(pseudofile,'PNG')
+                #pseudofile.seek(0, os.SEEK_END)
+                #size = pseudofile.tell()
+                size = len(imagebuffer.data)
+                # send image size
+                self.request.sendall(str(size))
+                self.data = self.request.recv(1024).strip()
+                self.request.sendall(imagebuffer.data)
+                print datetime.datetime.now(),'fin capture'
+
 
 
 class RequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
@@ -73,12 +106,12 @@ class RequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
                 self.wfile.write(pseudofile.getvalue())
                 pseudofile.close()
                 print datetime.datetime.now(),'fin response'
-        elif path == '/motorcontrol':
+        elif path == '/speedcontrol':
             print query
             try:
-                motor.set_speed(float(query['left'][0]), float(query['right'][0]))
+                robot.set_speed(float(query['left'][0]), float(query['right'][0]))
             except KeyError:
-                motor.set_speed(.0,.0)
+                robot.set_speed(.0,.0)
 
             self.send_response(200)
         else:
