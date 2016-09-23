@@ -45,17 +45,17 @@ class MyTCPHandler(SocketServer.BaseRequestHandler):
             if self.data == '1':
                 print datetime.datetime.now(),'start capture'
                 # Send the html message
-                #img = Image.fromstring(imagebuffer.mode, (imagebuffer.width,imagebuffer.height), imagebuffer.data)
-                #pseudofile = StringIO()
+                img = Image.fromstring(imagebuffer.mode, (imagebuffer.width,imagebuffer.height), imagebuffer.data)
+                pseudofile = StringIO()
                 print datetime.datetime.now(),'start png'
-                #img.save(pseudofile,'PNG')
-                #pseudofile.seek(0, os.SEEK_END)
-                #size = pseudofile.tell()
-                size = len(imagebuffer.data)
+                img.save(pseudofile,'PNG')
+                pseudofile.seek(0, os.SEEK_END)
+                size = pseudofile.tell()
+                #size = len(imagebuffer.data)
                 # send image size
                 self.request.sendall(str(size))
                 self.data = self.request.recv(1024).strip()
-                self.request.sendall(imagebuffer.data)
+                self.request.sendall(pseudofile.getvalue())#imagebuffer.data)
                 print datetime.datetime.now(),'fin capture'
 
 
