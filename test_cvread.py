@@ -26,4 +26,5 @@ while(1):
     x = np.fromstring(image, dtype='uint8')
     image = cv2.imdecode(x, cv2.IMREAD_UNCHANGED)
     cv2.imshow('test', image)
-    cv2.waitKey(0)
+    cv2.waitKey(100)
+    client_socket.send('motor 0.1 0.1')

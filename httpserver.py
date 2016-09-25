@@ -42,7 +42,8 @@ class MyTCPHandler(SocketServer.BaseRequestHandler):
         # self.request is the TCP socket connected to the client
         while True:
             self.data = self.request.recv(1024).strip()
-            if self.data == 'capture':
+            command = self.data.split()
+            if command[0] == 'capture':
                 print datetime.datetime.now(),'start capture'
                 # Send the html message
                 img = Image.fromstring(imagebuffer.mode, (imagebuffer.width,imagebuffer.height), imagebuffer.data.tostring())
@@ -60,5 +61,8 @@ class MyTCPHandler(SocketServer.BaseRequestHandler):
                 #send image
                 self.request.sendall(pseudofile.getvalue())#imagebuffer.data)
                 print datetime.datetime.now(),'fin capture'
+            
+            elif command[0] == 'motor':
+                robot.set_speed(float(command[1]), float(command[2]))
 
 
