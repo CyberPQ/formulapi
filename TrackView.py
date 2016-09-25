@@ -6,6 +6,7 @@ from OpenGL.GLU import *
 from wx import glcanvas
 from SceneView import SceneView
 from OpenGL.GLU import *
+from Track import Track
 
 class TrackView(SceneView):
     def __init__(self, parent, car):
@@ -17,7 +18,7 @@ class TrackView(SceneView):
         print self.name, 'init pov', size
         glMatrixMode(GL_PROJECTION)
         glLoadIdentity()
-        glOrtho(0.0, size.width, size.height, 0.0, 0., 10.0)
+        glOrtho(-Track.L1/2., Track.L1/2., -Track.L2/2., Track.L2/2., -2, 1)
         glMatrixMode(GL_MODELVIEW)
         glLoadIdentity()
         self.ispovinit = True

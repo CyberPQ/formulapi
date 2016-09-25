@@ -9,7 +9,7 @@ class Track(object):
     L1 = 10.3
     L2 = 6.6
     H = -Robot.hauteurcamera
-    terrain = ((-L1/2.,H,L2/2.),(-L1/2.,H,-L2/2.),(L1/2.,H,-L2/2.),(L1/2.,H,L2/2.))
+    terrain = ((-L1/2.,L2/2.,H),(-L1/2.,-L2/2.,H),(L1/2.,-L2/2.,H),(L1/2.,L2/2.,H))
     terraintex = ((0.0, 0.0),(1.0, 0.0),(1.0, 1.0),(0.0, 1.0))
 
     def __init__(self):

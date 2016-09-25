@@ -1,38 +1,10 @@
-import numpy
-import math
-import time
-import sys
-import threading
-import SocketServer
-import httpserver
-import imagebuffer
-import datetime
-from Robot import robot
 
-from PIL import Image
-from OpenGL.GL import *
-from OpenGL.GLU import *
-from OpenGL.GLUT import *
-
-"""
-source:
-https://github.com/AidanHaddonWright/OpenGL_tutorials/blob/master/Lessons/02-%20Creating_a_first_person_perspective/main.py
-
-install pyopengl from http://www.lfd.uci.edu/~gohlke/pythonlibs/#pyopengl
-
-install these .whl files for 64 bits:
-    pip install PyOpenGL-3.1.1-cp27-cp27m-win_amd64.whl
-    pip install PyOpenGL_accelerate-3.1.1-cp27-cp27m-win_amd64.whl
-
-install these .whl files for 32 bits:
-    pip install PyOpenGL-3.1.1-cp27-cp27m-win32.whl 
-    pip install PyOpenGL_accelerate-3.1.1-cp27-cp27m-win32.whl
 
 """
 
-#41.5mm
-hauteurcamera = 0.0415
-H = -hauteurcamera
+"""
+
+
 #10.3m par 6.6
 L1 = 10.3
 L2 = 6.6
@@ -88,39 +60,7 @@ def drawText(x, y, text):
                     GL_RGBA, GL_UNSIGNED_BYTE, textData)
 
 
-class Texture(object):
-# simple texture class
-# designed for 32 bit png images (with alpha channel)
-    def __init__(self,fileName):
-        self.texid=0
-        self.LoadTexture(fileName)
 
-    def LoadTexture(self,filename):
-        img = Image.open(filename)
-        imgdata = numpy.array(list(img.getdata()), numpy.uint8)
-
-        self.texid=glGenTextures(1)
-
-        glEnable(GL_TEXTURE_2D)
-        glBindTexture(GL_TEXTURE_2D, self.texid)
-        glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,GL_LINEAR)
-        glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,GL_LINEAR)
-        
-        glTexImage2D( GL_TEXTURE_2D, 0, GL_RGBA,
-                    img.size[0], img.size[1],
-                    0, GL_RGBA, GL_UNSIGNED_BYTE, imgdata )
-        glDisable(GL_TEXTURE_2D)
-
-    def __del__(self):
-        glDeleteTextures(self.texid)
-
-
-class Camera(object):
-
-    def __init__(self):
-        self.pos = [0,0,0]
-        self.rot = [0,0,0]
-        
         
 
 class Main(object):
@@ -156,27 +96,13 @@ class Main(object):
         self.setfps(value)
     
     def draw(self):
-        glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT)
-        """glBegin(GL_QUADS)
-        i = 0
-        for face in faces:
-            glColor3fv(colours[i])
-            for vertex in face:
-                glVertex3fv(vertices[vertex])
-            i += 1
-        glEnd()"""
+        
+        #robot, vue du dessus = un rectangle
+        x = self.camera.pos[0]
+        y = self.camera.pos[1]
+        z = self.camera.pos[2]
+        
 
-        #sol
-        glEnable(GL_TEXTURE_2D)
-        glBindTexture(GL_TEXTURE_2D,self.piste.texid)
-        glBegin(GL_QUADS)
-        glColor3fv((1,1,1))
-        for i, vertex in enumerate(terrain):
-            glTexCoord2f(*terraintex[i])
-            glVertex3fv(vertex)
-    
-        glEnd()
-        glDisable(GL_TEXTURE_2D)
 
     def __init__(self):
         self.running = True
@@ -185,15 +111,15 @@ class Main(object):
         self.capture = False
         self.startup()
         self.camera = Camera()
-        self.piste = Texture('piste2.png')
+        
 
     def update_camera(self):
         rot = self.camera.rot
-        #print 'rotation:', rot[1]
-        glRotatef(-rot[0],1,0,0)
-        glRotatef(-rot[1],0,1,0)
         x,y,z = self.camera.pos
-        glTranslatef(-x,-y,-z)
+        #5 au dessus du centre
+        gluLookAt(0,5,0,0,0,0,1,0,0)
+        #camera point of view
+        #gluLookAt(x,y,z,x-math.sin(math.radians(rot[1])),y,z-math.cos(math.radians(rot[1])),0,1,0)
     
     def display(self):
         currenttime = glutGet(GLUT_ELAPSED_TIME) / 1000.0
@@ -220,20 +146,7 @@ class Main(object):
         # infinite loop
         glutMainLoop()
 
-    def move(self, dt):
-        drot_radian, d = robot.get_deltarotation(dt)
-        #ajustement rotation
-        self.camera.rot[1] += math.degrees(drot_radian)
-        if self.camera.rot[1] > 360.:
-            self.camera.rot[1] -= 360.
-        if self.camera.rot[1] < -360.:
-            self.camera.rot[1] += 360.
-        #calcul nouvelle coordonnee
-        yaw = -math.radians(self.camera.rot[1])
-        dx = d*math.sin(yaw)
-        dz = d*math.cos(yaw)
-        self.camera.pos[0] += dx
-        self.camera.pos[2] -= dz
+    
 
 
     def checkForInput(self, key, x, y):

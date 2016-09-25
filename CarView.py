@@ -17,4 +17,4 @@ class CarView(SceneView):
         rot = self.car.rot
         x,y,z = self.car.pos
         #camera point of view
-        gluLookAt(x,y,z,x-math.sin(rot[1]),y,z-math.cos(rot[1]),0,1,0)
+        gluLookAt(x,y,z,x+math.cos(rot[2]),y+math.sin(rot[2]),z,0,0,1)
