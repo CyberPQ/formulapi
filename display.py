@@ -3,16 +3,13 @@ import math
 import time
 import sys
 import threading
-import BaseHTTPServer
 import SocketServer
 import httpserver
 import imagebuffer
 import datetime
 from Robot import robot
 
-import pygame
-from pygame.locals import *
-
+from PIL import Image
 from OpenGL.GL import *
 from OpenGL.GLU import *
 from OpenGL.GLUT import *
@@ -97,9 +94,10 @@ class Texture(object):
     def __init__(self,fileName):
         self.texid=0
         self.LoadTexture(fileName)
-    def LoadTexture(self,fileName):
-        textureSurface = pygame.image.load(fileName)
-        textureData = pygame.image.tostring(textureSurface, "RGBA", 0)
+
+    def LoadTexture(self,filename):
+        img = Image.open(filename)
+        imgdata = numpy.array(list(img.getdata()), numpy.uint8)
 
         self.texid=glGenTextures(1)
 
@@ -109,8 +107,8 @@ class Texture(object):
         glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,GL_LINEAR)
         
         glTexImage2D( GL_TEXTURE_2D, 0, GL_RGBA,
-                    textureSurface.get_width(), textureSurface.get_height(),
-                    0, GL_RGBA, GL_UNSIGNED_BYTE, textureData )
+                    img.size[0], img.size[1],
+                    0, GL_RGBA, GL_UNSIGNED_BYTE, imgdata )
         glDisable(GL_TEXTURE_2D)
 
     def __del__(self):
@@ -129,37 +127,36 @@ class Main(object):
     WIDTH = 600
     HEIGHT = 400
 
-    def lock_mouse(self):
-        if self.lock == True:
-            pygame.mouse.set_visible(False)
-            pygame.event.set_grab(1)
-        else:
-            pygame.mouse.set_visible(True)
-            pygame.event.set_grab(0)
-
-    def view3d(self):
-        glMatrixMode(GL_PROJECTION)
-        glLoadIdentity()
-
-        gluPerspective(70,(self.WIDTH/self.HEIGHT),0.001,100)
-
-        glMatrixMode(GL_MODELVIEW)
-        glLoadIdentity()
-        glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT)
-
     def startup(self):
-        pygame.init()
-        self.clock = pygame.time.Clock()
-        self.screen = pygame.display.set_mode((self.WIDTH,self.HEIGHT), DOUBLEBUF|OPENGL)
-        pygame.display.set_caption('OpenGL window')
-        #glutInit()
+        glutInit()
+        glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGB | GLUT_DEPTH)
+        glutInitWindowSize(self.WIDTH, self.HEIGHT)
+        glutCreateWindow("Formulapi Simulator")
         glClearColor(0.5,0.7,1, 1.0)
 
-        glEnable(GL_DEPTH_TEST) 
+        glShadeModel(GL_SMOOTH)
+        glEnable(GL_DEPTH_TEST)
+        glMatrixMode(GL_PROJECTION)
+        glLoadIdentity()
+        gluPerspective(70,(self.WIDTH/self.HEIGHT),0.001,100)
+        glMatrixMode(GL_MODELVIEW)
+        glLoadIdentity()
+        #fps timer
+        self.setfps(60)
+        glutKeyboardFunc(self.checkForInput)
+        glutSpecialFunc(self.checkForInput)
+        glutDisplayFunc(self.display)
 
-        self.piste = Texture('piste2.png')
+    def setfps(self, fps):
+        self.fps = fps
+        glutTimerFunc(1000/fps, self.fpstimer, fps)
+
+    def fpstimer(self, value):
+        glutPostRedisplay()
+        self.setfps(value)
     
     def draw(self):
+        glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT)
         """glBegin(GL_QUADS)
         i = 0
         for face in faces:
@@ -183,11 +180,12 @@ class Main(object):
 
     def __init__(self):
         self.running = True
-        self.lock = True
+        self.oldframetime = 0
         self.speed = 0
         self.capture = False
         self.startup()
         self.camera = Camera()
+        self.piste = Texture('piste2.png')
 
     def update_camera(self):
         rot = self.camera.rot
@@ -197,25 +195,30 @@ class Main(object):
         x,y,z = self.camera.pos
         glTranslatef(-x,-y,-z)
     
-    def run(self):
-        while self.running:
-            deltat = self.clock.tick(60) / 1000.
+    def display(self):
+        currenttime = glutGet(GLUT_ELAPSED_TIME) / 1000.0
+        deltat = currenttime - self.oldframetime
+        self.oldframetime = currenttime
 
-            self.checkForInput()
-            self.move(deltat)
-            #debut nouvelle frame 
-            self.view3d()
-            glPushMatrix()
-            self.update_camera()
-            #drawText(5,5,'testfklsfklskflskflsdfksdlfkdslfklsm')
-            self.draw()
-            glPopMatrix()
-            pygame.display.flip()
-            if self.capture:
-                imagebuffer.mode = 'RGB'
-                imagebuffer.width = self.WIDTH
-                imagebuffer.height = self.HEIGHT
-                imagebuffer.data = pygame.image.tostring(self.screen, imagebuffer.mode, False)
+        #self.checkForInput()
+        self.move(deltat)
+        glPushMatrix()
+        self.update_camera()
+        self.draw()
+        glPopMatrix()
+        glutSwapBuffers()
+        if self.capture:
+            width, height = self.WIDTH, self.HEIGHT
+            glPixelStorei(GL_PACK_ALIGNMENT, 1)
+            data = glReadPixels(0, 0, width, height, GL_RGB, GL_UNSIGNED_BYTE, outputType=None)
+            imagebuffer.mode = 'RGB'
+            imagebuffer.width = width
+            imagebuffer.height = height
+            imagebuffer.data = data
+
+    def run(self):
+        # infinite loop
+        glutMainLoop()
 
     def move(self, dt):
         drot_radian, d = robot.get_deltarotation(dt)
@@ -233,28 +236,22 @@ class Main(object):
         self.camera.pos[2] -= dz
 
 
-    def checkForInput(self):
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                self.running = False
-            elif event.type == pygame.KEYDOWN:
-                if event.key == K_ESCAPE:
-                    self.lock = False
-                if event.key == K_UP:
-                    robot.add_speed(.4, .4)
-                if event.key == K_DOWN:
-                    robot.add_speed(-.4, -.4)
-                if event.key == K_SPACE:
-                    robot.set_speed(.0, .0)
-                if event.key == K_t:
-                    print datetime.datetime.now()
-                if event.key == K_p:
-                    self.capture = not self.capture
-                    print 'capture:', self.capture
-                if event.key == K_LEFT:
-                    robot.add_speed(-.1,.1)
-                if event.key == K_RIGHT:
-                    robot.add_speed(.1,-.1)
+    def checkForInput(self, key, x, y):
+        if key == GLUT_KEY_UP:
+            robot.add_speed(.4, .4)
+        if key == GLUT_KEY_DOWN:
+            robot.add_speed(-.4, -.4)
+        if key == ' ':
+            robot.set_speed(.0, .0)
+        if key == 't':
+            print datetime.datetime.now()
+        if key == 'p':
+            self.capture = not self.capture
+            print 'capture:', self.capture
+        if key == GLUT_KEY_LEFT:
+            robot.add_speed(-.1,.1)
+        if key == GLUT_KEY_RIGHT:
+            robot.add_speed(.1,-.1)
 
 
         
