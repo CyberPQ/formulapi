@@ -13,7 +13,7 @@ size = 1024
 
 while(1):
     print "debut reception fichier:", datetime.datetime.now()
-    client_socket.send('capture')
+    client_socket.send('capture 0')
     size = client_socket.recv(1024)
     size = int(size)
     print "The file size is - ",size," bytes"
@@ -25,6 +25,6 @@ while(1):
     print "fin reception fichier:", datetime.datetime.now()
     x = np.fromstring(image, dtype='uint8')
     image = cv2.imdecode(x, cv2.IMREAD_UNCHANGED)
-    cv2.imshow('test', image)
+    cv2.imshow('test 0', image)
     cv2.waitKey(100)
-    client_socket.send('motor 0.1 0.1')
+    client_socket.send('motor 0 0.1 0.1')

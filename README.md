@@ -11,3 +11,18 @@ install these .whl files for 64 bits:
 install these .whl files for 32 bits:
     pip install PyOpenGL-3.1.1-cp27-cp27m-win32.whl 
     pip install PyOpenGL_accelerate-3.1.1-cp27-cp27m-win32.whl
+
+installer PIL
+installer wxPython
+
+
+todo list:
+    [] add lap time per car
+    [] add starter light
+    [] add track wall
+    [] draw car in 3d
+    [] enhance track texture
+    [x] capture car view and send over tcp
+    [x] fix motor control from tcp
+    [] add collision detection
+    [x] add other car (multi car view)

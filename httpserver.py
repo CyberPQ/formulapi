@@ -18,8 +18,7 @@ import mimetypes
 from PIL import Image
 import datetime
 
-import imagebuffer
-from Robot import robot
+from carlist import listcar
 
 try:
     from cStringIO import StringIO
@@ -44,9 +43,11 @@ class MyTCPHandler(SocketServer.BaseRequestHandler):
             self.data = self.request.recv(1024).strip()
             command = self.data.split()
             if command[0] == 'capture':
-                print datetime.datetime.now(),'start capture'
+                carnum = int(command[1])
+                car = listcar[carnum]
+                print datetime.datetime.now(),'start capture', carnum
                 # Send the html message
-                img = Image.fromstring(imagebuffer.mode, (imagebuffer.width,imagebuffer.height), imagebuffer.data.tostring())
+                img = Image.fromstring(car.cameraimg.mode, (car.cameraimg.width,car.cameraimg.height), car.cameraimg.data.tostring())
                 img = img.transpose( Image.FLIP_TOP_BOTTOM)
                 pseudofile = StringIO()
                 print datetime.datetime.now(),'start png'
@@ -63,6 +64,8 @@ class MyTCPHandler(SocketServer.BaseRequestHandler):
                 print datetime.datetime.now(),'fin capture'
             
             elif command[0] == 'motor':
-                robot.set_speed(float(command[1]), float(command[2]))
+                carnum = int(command[1])
+                car = listcar[carnum]
+                car.set_speed(float(command[2]), float(command[3]))
 
 

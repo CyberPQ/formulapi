@@ -7,11 +7,12 @@ from wx import glcanvas
 from Track import Track
 
 class SceneView(glcanvas.GLCanvas):
-    def __init__(self, parent, car):
+    def __init__(self, parent, name, carlist):
         glcanvas.GLCanvas.__init__(self, parent, -1)
         self.init = False
         self.ispovinit = False
-        self.car = car
+        self.name = name
+        self.carlist = carlist
         self.context = glcanvas.GLContext(self)
         self.size = self.GetClientSize()
         self.Bind(wx.EVT_ERASE_BACKGROUND, self.OnEraseBackground)
@@ -59,6 +60,7 @@ class SceneView(glcanvas.GLCanvas):
         if not self.ispovinit:
             self.initpov()
         self.OnDraw()
+        self.CaptureView()
 
     def OnDraw(self):
         #print self.name, 'draw'
@@ -69,7 +71,8 @@ class SceneView(glcanvas.GLCanvas):
         #set point of view
         self.setpointofview()
         #draw Car
-        self.car.draw()
+        for car in self.carlist:
+            car.draw()
         #draw track
         self.track.draw()
         glPopMatrix()
@@ -78,3 +81,6 @@ class SceneView(glcanvas.GLCanvas):
     
     def setpointofview(self):
         raise NotImplementedError()
+
+    def CaptureView(self):
+        pass

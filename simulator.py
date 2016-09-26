@@ -29,36 +29,38 @@ import time
 import sys
 import threading
 import SocketServer
-import httpserver
-import imagebuffer
 import time
 
-from Robot import robot
+from carlist import listcar
 from CarView import CarView
 from TrackView import TrackView
+import httpserver
 #----------------------------------------------------------------------
 
+mycar = listcar[0]
 
 class MainPanel(wx.Panel):
     def __init__(self, parent):
         wx.Panel.__init__(self, parent, -1)
 
         self.oldtime = time.time()
-        self.viewbox = wx.BoxSizer(wx.HORIZONTAL)
+        self.viewbox = wx.WrapSizer()
         #self.viewbox.Add((20, 30))
-        #car view
-        c = CarView(self, robot)
-        c.SetMinSize((600, 400))
-        self.viewbox.Add(c, 0, wx.FIXED|wx.ALL, 1)
+        #car views
+        global listcar
+        for i, car in enumerate(listcar):
+            c = CarView(self, listcar, i)
+            c.SetMinSize((600, 400))
+            c.Refresh()
+            self.viewbox.Add(c, 0, wx.ALL, 1)
 
         #track view
-        c = TrackView(self, robot)
+        c = TrackView(self, listcar)
         c.SetMinSize((600, 400))
-        self.viewbox.Add(c, 0, wx.FIXED|wx.ALL, 1)
+        self.viewbox.Add(c, 0, wx.ALL, 1)
 
-        #self.SetAutoLayout(True)
-        self.viewbox.SetMinSize((600*2.2, 400*2.2))
-        self.SetSizerAndFit(self.viewbox)
+        self.SetAutoLayout(True)
+        self.SetSizer(self.viewbox)
 
         #refresh and animation timer
         self.timer = wx.Timer(self)
@@ -69,7 +71,9 @@ class MainPanel(wx.Panel):
         current = time.time()
         dt = current - self.oldtime
         self.oldtime = current
-        robot.move(dt)
+        global listcar
+        for car in listcar:        
+            car.move(dt)
         self.Refresh()
 
 #----------------------------------------------------------------------
@@ -96,7 +100,7 @@ class Simulator(wx.App):
         self.mainwin = MainPanel(frame)
 
         # set the frame to a good size for showing the two buttons
-        frame.SetSize((600*2,400))
+        frame.SetSize((600*2,400*2))
         self.mainwin.SetFocus()
         self.window = self.mainwin
         frect = frame.GetRect()
@@ -117,20 +121,19 @@ class Simulator(wx.App):
         key = evt.GetKeyCode()
         print 'key', key
         if key == wx.WXK_UP:
-            robot.add_speed(.4, .4)
+            mycar.add_speed(.4, .4)
         elif key == wx.WXK_DOWN:
-            robot.add_speed(-.4, -.4)
+            mycar.add_speed(-.4, -.4)
         elif key == wx.WXK_SPACE:
-            robot.set_speed(.0, .0)
+            mycar.set_speed(.0, .0)
         elif key == 't':
             print datetime.datetime.now()
         elif key == 'p':
-            self.capture = not self.capture
-            print 'capture:', self.capture
+            pass
         elif key == wx.WXK_LEFT:
-            robot.add_speed(-.1,.1)
+            mycar.add_speed(-.1,.1)
         elif key == wx.WXK_RIGHT:
-            robot.add_speed(.1,-.1)
+            mycar.add_speed(.1,-.1)
         else:
             evt.Skip()
 

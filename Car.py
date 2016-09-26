@@ -3,8 +3,14 @@ import math
 from OpenGL.GL import *
 from OpenGL.GLU import *
 
+class CameraImage(object):
+    def __init__(self):
+        self.data = ''
+        self.width = 0
+        self.height = 0
+        self.mode = 'RGB'
 
-class Robot(object):
+class Car(object):
     #159mm
     ENTRAXE = 0.159
     #chassis + demi-roue
@@ -21,6 +27,7 @@ class Robot(object):
         self.rightspeed = .0
         self.pos = [0,0,0]
         self.rot = [0,0,0]
+        self.cameraimg = CameraImage()
 
 
     def set_speed(self, left, right):
@@ -87,5 +94,3 @@ class Robot(object):
         for vertex in points:
             glVertex3fv(vertex)
         glEnd()
-
-robot = Robot()

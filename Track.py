@@ -2,7 +2,7 @@ from OpenGL.GL import *
 from OpenGL.GLU import *
 
 from Texture import Texture
-from Robot import Robot
+from Car import Car
 
 class Track(object):
     """La piste fait 10.3m (ligne droite) par 6.6m
@@ -12,7 +12,7 @@ class Track(object):
     """
     L1 = 10.3 * 1024/752.
     L2 = L1
-    H = -Robot.hauteurcamera
+    H = -Car.hauteurcamera
     terrain = ((-L1/2.,-L2/2.,H),(L1/2.,-L2/2.,H),(L1/2.,L2/2.,H),(-L1/2.,L2/2.,H))
     terrain = ((-10,-10,H),(10,-10,H),(10,10,H),(-10,10,H))
     terraintex = ((0.0, 0.0),(1.0, 0.0),(1.0, 1.0),(0.0, 1.0))

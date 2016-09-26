@@ -9,9 +9,8 @@ from OpenGL.GLU import *
 from Track import Track
 
 class TrackView(SceneView):
-    def __init__(self, parent, car):
-        self.name = 'trackview'
-        SceneView.__init__(self, parent, car)
+    def __init__(self, parent, carlist):
+        SceneView.__init__(self, parent, 'trackview', carlist)
 
     def _initpov(self):
         size = self.GetClientSize()
