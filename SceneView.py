@@ -35,7 +35,7 @@ class SceneView(glcanvas.GLCanvas):
         glEnable(GL_DEPTH_TEST)
         glMatrixMode(GL_PROJECTION)
         glLoadIdentity()
-        gluPerspective(70,(size.width/size.height),0.001,100)
+        gluPerspective(70,float(size.width)/float(size.height),0.001,100)
         glMatrixMode(GL_MODELVIEW)
         glLoadIdentity()
         self.ispovinit = True
@@ -44,6 +44,9 @@ class SceneView(glcanvas.GLCanvas):
         pass # Do nothing, to avoid flashing on MSW.
 
     def OnSize(self, event):
+        self.SetCurrent(self.context)
+        size = self.GetClientSize()
+        glViewport(0,0,size.width, size.height)
         self.ispovinit = False
         event.Skip()
         

@@ -57,7 +57,7 @@ class MainPanel(wx.Panel):
         self.viewbox.Add(c, 0, wx.FIXED|wx.ALL, 1)
 
         #self.SetAutoLayout(True)
-        self.viewbox.SetMinSize((600*2, 400*2))
+        self.viewbox.SetMinSize((600*2.2, 400*2.2))
         self.SetSizerAndFit(self.viewbox)
 
         #refresh and animation timer

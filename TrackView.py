@@ -13,17 +13,17 @@ class TrackView(SceneView):
         self.name = 'trackview'
         SceneView.__init__(self, parent, car)
 
-    def initpov(self):
+    def _initpov(self):
         size = self.GetClientSize()
         print self.name, 'init pov', size
         glMatrixMode(GL_PROJECTION)
         glLoadIdentity()
-        glOrtho(-Track.L1/2., Track.L1/2., -Track.L2/2., Track.L2/2., -2, 1)
+        glOrtho(-15, 15, -15, 15, -2, 1)
         glMatrixMode(GL_MODELVIEW)
         glLoadIdentity()
         self.ispovinit = True
     
     def setpointofview(self):
         #5 au dessus du centre
-        #gluLookAt(0,4,0,0,0,0,1,0,0)
+        gluLookAt(0,0,8,0,0,0,0,-1,0)
         pass

@@ -72,18 +72,18 @@ class Robot(object):
         z = self.pos[2]
         angle = self.rot[2]
 
-        ax = x - self.LARGEUR/2.*math.sin(angle+math.pi/2.) - self.LONGUEUR/2.*math.sin(angle)
-        ay = y - self.LARGEUR/2.*math.cos(angle+math.pi/2.) - self.LONGUEUR/2.*math.cos(angle)
-        bx = x - self.LARGEUR/2.*math.sin(angle-math.pi/2.) - self.LONGUEUR/2.*math.sin(angle)
-        by = y - self.LARGEUR/2.*math.cos(angle-math.pi/2.) - self.LONGUEUR/2.*math.cos(angle)
-        cx = bx + self.LONGUEUR*math.sin(angle)
-        cy = by + self.LONGUEUR*math.cos(angle)
-        dx = ax + self.LONGUEUR*math.sin(angle)
-        dy = ay + self.LONGUEUR*math.cos(angle)
+        ax = x - self.LARGEUR/2.*math.cos(angle+math.pi/2.) - self.LONGUEUR/2.*math.cos(angle)
+        ay = y - self.LARGEUR/2.*math.sin(angle+math.pi/2.) - self.LONGUEUR/2.*math.sin(angle)
+        bx = x - self.LARGEUR/2.*math.cos(angle-math.pi/2.) - self.LONGUEUR/2.*math.cos(angle)
+        by = y - self.LARGEUR/2.*math.sin(angle-math.pi/2.) - self.LONGUEUR/2.*math.sin(angle)
+        cx = bx + self.LONGUEUR*math.cos(angle)
+        cy = by + self.LONGUEUR*math.sin(angle)
+        dx = ax + self.LONGUEUR*math.cos(angle)
+        dy = ay + self.LONGUEUR*math.sin(angle)
         points = [(ax,ay,z),(bx,by,z),(cx,cy,z),(dx,dy,z)]
         glBegin(GL_QUADS)
-        #noir
-        glColor3fv((0,0,0))
+        #blanc
+        glColor3fv((1,1,1))
         for vertex in points:
             glVertex3fv(vertex)
         glEnd()

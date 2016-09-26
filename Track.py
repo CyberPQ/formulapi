@@ -5,11 +5,16 @@ from Texture import Texture
 from Robot import Robot
 
 class Track(object):
-    #10.3m par 6.6
-    L1 = 10.3
-    L2 = 6.6
+    """La piste fait 10.3m (ligne droite) par 6.6m
+    la texture representant la piste fait 1024*1024, il faut donc que la surface
+    texturee soit un carre. dans l image de texture 10.3m=752px. Il faut donc que la
+    surface fasse 10.3 * 1024/752
+    """
+    L1 = 10.3 * 1024/752.
+    L2 = L1
     H = -Robot.hauteurcamera
-    terrain = ((-L1/2.,L2/2.,H),(-L1/2.,-L2/2.,H),(L1/2.,-L2/2.,H),(L1/2.,L2/2.,H))
+    terrain = ((-L1/2.,-L2/2.,H),(L1/2.,-L2/2.,H),(L1/2.,L2/2.,H),(-L1/2.,L2/2.,H))
+    terrain = ((-10,-10,H),(10,-10,H),(10,10,H),(-10,10,H))
     terraintex = ((0.0, 0.0),(1.0, 0.0),(1.0, 1.0),(0.0, 1.0))
 
     def __init__(self):

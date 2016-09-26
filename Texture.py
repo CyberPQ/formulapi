@@ -20,6 +20,8 @@ class Texture(object):
         glBindTexture(GL_TEXTURE_2D, self.texid)
         glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,GL_LINEAR)
         glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,GL_LINEAR)
+        color = (1.0, 0.0, 0.0, 1.0)
+        glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, color)
         
         glTexImage2D( GL_TEXTURE_2D, 0, GL_RGBA,
                     img.size[0], img.size[1],
