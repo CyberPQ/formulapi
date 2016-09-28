@@ -51,7 +51,7 @@ class MainPanel(wx.Panel):
         for i, car in enumerate(listcar):
             c = CarView(self, listcar, i)
             c.SetMinSize((600, 400))
-            c.Refresh()
+            #c.Refresh()
             self.viewbox.Add(c, 0, wx.ALL, 1)
 
         #track view
@@ -119,24 +119,26 @@ class Simulator(wx.App):
 
     def OnKey(self, evt):
         key = evt.GetKeyCode()
-        print 'key', key
         if key == wx.WXK_UP:
             mycar.add_speed(.4, .4)
         elif key == wx.WXK_DOWN:
             mycar.add_speed(-.4, -.4)
         elif key == wx.WXK_SPACE:
             mycar.set_speed(.0, .0)
-        elif key == 't':
+        elif key == ord('T'):
             print datetime.datetime.now()
-        elif key == 'p':
-            pass
+        elif key == ord('A'):
+            global mycar
+            mycar = listcar[0]
+        elif key == ord('B'):
+            global mycar
+            mycar = listcar[1]
         elif key == wx.WXK_LEFT:
             mycar.add_speed(-.1,.1)
         elif key == wx.WXK_RIGHT:
             mycar.add_speed(.1,-.1)
         else:
             evt.Skip()
-
 
 if __name__ == '__main__':
     HOST, PORT = "localhost", 8000

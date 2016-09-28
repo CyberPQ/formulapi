@@ -14,8 +14,10 @@ class CarView(SceneView):
         SceneView.__init__(self, parent, name, carlist)
         self.carnumber = carnumber
         self.car = self.carlist[self.carnumber]
+        print self.name, 'car is', self.car
 
     def setpointofview(self):
+        #print 'setpointofview', self.name, '-',self.car.pos, self.car.rot
         rot = self.car.rot
         x,y,z = self.car.pos
         #camera point of view

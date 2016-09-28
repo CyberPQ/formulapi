@@ -24,19 +24,21 @@ class SceneView(glcanvas.GLCanvas):
     def InitGL(self):
         size = self.GetClientSize()
         print self.name, 'initGL', size
-        
         glClearColor(0.5,0.7,1, 1.0)
+        glShadeModel(GL_SMOOTH)
+        glEnable(GL_DEPTH_TEST)
         self.track = Track()
         self.initpov()
 
     def initpov(self):
         size = self.GetClientSize()
         print self.name, 'init pov', size
-        glShadeModel(GL_SMOOTH)
-        glEnable(GL_DEPTH_TEST)
+        size.height = size.height or 1
         glMatrixMode(GL_PROJECTION)
         glLoadIdentity()
         gluPerspective(70,float(size.width)/float(size.height),0.001,100)
+        glMatrixMode(GL_MODELVIEW)
+        glLoadIdentity()
         self.ispovinit = True
 
     def OnEraseBackground(self, event):
@@ -61,22 +63,19 @@ class SceneView(glcanvas.GLCanvas):
         self.CaptureView()
 
     def OnDraw(self):
-        #print self.name, 'draw'
         # clear color and depth buffers
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
         glMatrixMode(GL_MODELVIEW)
         glLoadIdentity()
-        #print 'GL_MODELVIEW_STACK_DEPTH:', glGetIntegerv(GL_MODELVIEW_STACK_DEPTH)
 
-        glPushMatrix()
         #set point of view
         self.setpointofview()
-        #draw Car
+        #draw Cars
+        #print self.name,'draw car'
         for car in self.carlist:
             car.draw()
         #draw track
         self.track.draw()
-        glPopMatrix()
         
         self.SwapBuffers()
     

@@ -22,7 +22,7 @@ class Car(object):
     #41.5mm
     hauteurcamera = 0.0415
 
-    def __init__(self):
+    def __init__(self,num):
         #lock to protect variable
         self.lock = RLock()
         #motor speed
@@ -32,6 +32,7 @@ class Car(object):
         self.rot = [0,0,0]
         self.cameraimg = CameraImage()
         self.carobj = None
+        self.num = num
 
 
     def set_speed(self, left, right):
@@ -78,10 +79,14 @@ class Car(object):
         self.pos[1] += dy
 
     def draw(self):
+        #print 'car', self.num, '-',self.pos, self.rot,self
         if not self.carobj:
             self.carobj = importobj.OBJ('resources/car.obj')
         glPushMatrix()
-        glscalef(0.01,0.01,0.01)
+        angle = self.rot[2]
+        glTranslatef(self.pos[0], self.pos[1], 0.1)
+        #glRotatef(math.degrees(self.rot[2]),0,0,1)
+        #glRotatef(90.,0,0,1)
         glCallList(self.carobj.gl_list)
         glPopMatrix()
     
