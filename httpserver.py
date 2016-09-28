@@ -17,6 +17,7 @@ import shutil
 import mimetypes
 from PIL import Image
 import datetime
+import time
 
 from carlist import listcar
 
@@ -46,6 +47,9 @@ class MyTCPHandler(SocketServer.BaseRequestHandler):
                 carnum = int(command[1])
                 car = listcar[carnum]
                 print datetime.datetime.now(),'start capture', carnum
+                car.cameraimg.capture = True
+                while car.cameraimg.capture:
+                    time.sleep(0.01)
                 # Send the html message
                 img = Image.fromstring(car.cameraimg.mode, (car.cameraimg.width,car.cameraimg.height), car.cameraimg.data.tostring())
                 img = img.transpose( Image.FLIP_TOP_BOTTOM)

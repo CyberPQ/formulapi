@@ -37,8 +37,6 @@ class SceneView(glcanvas.GLCanvas):
         glMatrixMode(GL_PROJECTION)
         glLoadIdentity()
         gluPerspective(70,float(size.width)/float(size.height),0.001,100)
-        glMatrixMode(GL_MODELVIEW)
-        glLoadIdentity()
         self.ispovinit = True
 
     def OnEraseBackground(self, event):
@@ -66,6 +64,9 @@ class SceneView(glcanvas.GLCanvas):
         #print self.name, 'draw'
         # clear color and depth buffers
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
+        glMatrixMode(GL_MODELVIEW)
+        glLoadIdentity()
+        #print 'GL_MODELVIEW_STACK_DEPTH:', glGetIntegerv(GL_MODELVIEW_STACK_DEPTH)
 
         glPushMatrix()
         #set point of view

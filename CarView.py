@@ -22,10 +22,12 @@ class CarView(SceneView):
         gluLookAt(x,y,z,x+math.cos(rot[2]),y+math.sin(rot[2]),z,0,0,1)
 
     def CaptureView(self):
-        size = self.GetClientSize()
-        glPixelStorei(GL_PACK_ALIGNMENT, 1)
-        data = glReadPixels(0, 0, size.width, size.height, GL_RGB, GL_UNSIGNED_BYTE, outputType=None)
-        self.car.cameraimg.mode = 'RGB'
-        self.car.cameraimg.width = size.width
-        self.car.cameraimg.height = size.height
-        self.car.cameraimg.data = data
+        if self.car.cameraimg.capture:   
+            size = self.GetClientSize()
+            glPixelStorei(GL_PACK_ALIGNMENT, 1)
+            data = glReadPixels(0, 0, size.width, size.height, GL_RGB, GL_UNSIGNED_BYTE, outputType=None)
+            self.car.cameraimg.mode = 'RGB'
+            self.car.cameraimg.width = size.width
+            self.car.cameraimg.height = size.height
+            self.car.cameraimg.data = data
+            self.car.cameraimg.capture = False

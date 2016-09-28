@@ -3,12 +3,15 @@ import math
 from OpenGL.GL import *
 from OpenGL.GLU import *
 
+import importobj
+
 class CameraImage(object):
     def __init__(self):
         self.data = ''
         self.width = 0
         self.height = 0
         self.mode = 'RGB'
+        self.capture = False
 
 class Car(object):
     #159mm
@@ -28,6 +31,7 @@ class Car(object):
         self.pos = [0,0,0]
         self.rot = [0,0,0]
         self.cameraimg = CameraImage()
+        self.carobj = None
 
 
     def set_speed(self, left, right):
@@ -74,6 +78,14 @@ class Car(object):
         self.pos[1] += dy
 
     def draw(self):
+        if not self.carobj:
+            self.carobj = importobj.OBJ('resources/car.obj')
+        glPushMatrix()
+        glscalef(0.01,0.01,0.01)
+        glCallList(self.carobj.gl_list)
+        glPopMatrix()
+    
+    def olddraw(self):
         x = self.pos[0]
         y = self.pos[1]
         z = self.pos[2]
