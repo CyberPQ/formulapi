@@ -20,9 +20,31 @@ todo list:
     [] add lap time per car
     [] add starter light
     [] add track wall
-    [] draw car in 3d
+    [x] draw car in 3d
     [] enhance track texture
     [x] capture car view and send over tcp
     [x] fix motor control from tcp
     [] add collision detection
     [x] add other car (multi car view)
+
+
+collision for lap count:
+ 57
+down vote
+	
+
+The problem reduces to this question: Do two lines from A to B and from C to D intersect?
+Then you can ask it four times (between the line and each of the four sides of the rectangle).
+
+Here's the vector math for doing it. I'm assuming the line from A to B is the line in question and the line from C to D is one of the rectangle lines.
+My notation is that Ax is the "x-coordinate of A" and Cy is the "y-coordinate of C." And "*" means dot-product, so e.g. A*B = Ax*Bx + Ay*By.
+
+E = B-A = ( Bx-Ax, By-Ay )
+F = D-C = ( Dx-Cx, Dy-Cy ) 
+P = ( -Ey, Ex )
+h = ( (A-C) * P ) / ( F * P )
+
+This h number is the key. If h is between 0 and 1, the lines intersect, otherwise they don't. If F*P is zero,
+of course you cannot make the calculation, but in this case the lines are parallel and therefore only intersect in the obvious cases.
+
+The exact point of intersection is C + F*h.
