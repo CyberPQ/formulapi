@@ -21,7 +21,7 @@ class CarView(SceneView):
         rot = self.car.rot
         x,y,z = self.car.pos
         #camera point of view
-        gluLookAt(x,y,z,x+math.cos(rot[2]),y+math.sin(rot[2]),z,0,0,1)
+        gluLookAt(x+0.12*math.cos(rot[2]),y+0.12*math.sin(rot[2]),z,x+math.cos(rot[2]),y+math.sin(rot[2]),z,0,0,1)
 
     def CaptureView(self):
         if self.car.cameraimg.capture:   

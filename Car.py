@@ -85,12 +85,11 @@ class Car(object):
             self.carobj[viewname] = obj
         glPushMatrix()
         angle = self.rot[2]
-        glTranslatef(self.pos[0], self.pos[1], 0.1)
-        glRotatef(math.degrees(self.rot[2]),0,0,1)
+        glTranslatef(self.pos[0], self.pos[1], 0)
+        glRotatef(math.degrees(angle),0,0,1)
         glRotatef(90.,0,0,1)
         glCallList(self.carobj[viewname].gl_list)
         glPopMatrix()
-        self.olddraw()
     
     def olddraw(self):
         x = self.pos[0]
