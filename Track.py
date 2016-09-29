@@ -1,5 +1,7 @@
 from OpenGL.GL import *
 from OpenGL.GLU import *
+import math
+from math import pi, cos, sin
 
 from Texture import Texture
 from Car import Car
@@ -17,10 +19,28 @@ class Track(object):
     terrain = ((-10,-10,H),(10,-10,H),(10,10,H),(-10,10,H))
     terraintex = ((0.0, 0.0),(1.0, 0.0),(1.0, 1.0),(0.0, 1.0))
 
+    RED   = (1,0,0)
+    BLUE  = (0,0,1)
+    GREEN = (0,1,0)
+    LANE_WIDTH = 0.76
+    NB_LANE = 1
+    LANE_COLOR = [GREEN, BLUE, GREEN, RED, BLUE, GREEN]
+
     def __init__(self):
         self.texture = Texture('piste2.png')
+        self.quadric = {}
+        self.trackelt=[
+            {'type':'straight', 'L':5.4},
+            {'type':'turn', 'L':0.7, 'sweep':3*pi/4.},
+            {'type':'straight', 'L':2},
+            {'type':'turn', 'L':0.5, 'sweep':pi/2.},
+            {'type':'turn', 'L':1.4, 'sweep':-pi/2.},
+            {'type':'turn', 'L':1.4, 'sweep':3*pi/4.},
+            {'type':'straight', 'L':1.7},
+            {'type':'turn', 'L':1.4, 'sweep':pi/2.}
+        ]
 
-    def draw(self):
+    def olddraw(self):
         #sol
         glEnable(GL_TEXTURE_2D)
         glBindTexture(GL_TEXTURE_2D,self.texture.texid)
@@ -32,3 +52,60 @@ class Track(object):
 
         glEnd()
         glDisable(GL_TEXTURE_2D)
+    
+    def drawrect(self):
+        glBegin(GL_QUADS)
+        glVertex3f(0, 0, 0)
+        glVertex3f(1, 0, 0)
+        glVertex3f(1, 1, 0)
+        glVertex3f(0, 1, 0)
+        glEnd()
+    
+    def draw(self, viewname):
+        if not self.quadric.get(viewname,None):
+            self.quadric[viewname] = []
+            #create one quadric by turn by view
+            for elt in self.trackelt:
+                if elt['type'] == 'turn':
+                    quad = gluNewQuadric()
+                    gluQuadricDrawStyle(quad, GLU_FILL)
+                    self.quadric[viewname].append(quad)
+                else:
+                    self.quadric[viewname].append(None)
+
+        for lane in range(self.NB_LANE):
+            current_angle = -pi
+            x,y = 0,0
+            for i, elt in enumerate(self.trackelt):
+                print 'x,y,angle',x,y,math.degrees(current_angle)
+                glPushMatrix()
+                glColor3fv(self.LANE_COLOR[lane])
+                if elt['type'] == 'turn':
+                    angle = math.degrees(-current_angle)
+                    sweep = math.degrees(elt['sweep'])
+                    inside_r = elt['L'] / elt['sweep']
+                    outside_r = inside_r + self.LANE_WIDTH
+                    dx = inside_r*cos(current_angle+pi/2.)
+                    dy = inside_r*sin(current_angle+pi/2.)
+                    glTranslatef(x-dx,y-dy,-Car.hauteurcamera)
+                    gluPartialDisk(self.quadric[viewname][i],inside_r,outside_r,32,32,angle,sweep)
+                    # on calcule le changement de coordonnee pour un point a qui tourne de sweep a partir de current angle
+                    # les coordonnees ont pour origine le centre du cercle de rotation
+                    sweep = elt['sweep']
+                    xa = dx
+                    ya = dy
+                    xb = xa*cos(sweep) + ya*sin(sweep)
+                    yb = -xa*sin(sweep) + ya*cos(sweep)
+                    # on ajoute le deplacement par rapport au coordonnee initiale en corrigeant par rapport au centre du cercle de rotation
+                    x = x + (xb-xa)
+                    y = y + (yb-ya)
+                    current_angle -= elt['sweep']
+                else:
+                    angle = math.degrees(current_angle)
+                    glTranslatef(x,y,-Car.hauteurcamera)
+                    glRotatef(angle,0,0,1)
+                    glScalef(elt['L'], self.LANE_WIDTH, 0)
+                    self.drawrect()
+                    x += elt['L']*cos(current_angle)
+                    y += elt['L']*sin(current_angle)
+                glPopMatrix()

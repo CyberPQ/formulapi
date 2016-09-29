@@ -75,7 +75,7 @@ class SceneView(glcanvas.GLCanvas):
         for car in self.carlist:
             car.draw(self.name)
         #draw track
-        self.track.draw()
+        self.track.draw(self.name)
         
         self.SwapBuffers()
     
