@@ -31,7 +31,7 @@ class Car(object):
         self.pos = [0,0,0]
         self.rot = [0,0,0]
         self.cameraimg = CameraImage()
-        self.carobj = None
+        self.carobj = {}
         self.num = num
 
 
@@ -78,17 +78,19 @@ class Car(object):
         self.pos[0] += dx
         self.pos[1] += dy
 
-    def draw(self):
+    def draw(self, viewname):
         #print 'car', self.num, '-',self.pos, self.rot,self
-        if not self.carobj:
-            self.carobj = importobj.OBJ('resources/car.obj')
+        if not self.carobj.get(viewname, None):
+            obj = importobj.OBJ('resources/car.obj')
+            self.carobj[viewname] = obj
         glPushMatrix()
         angle = self.rot[2]
         glTranslatef(self.pos[0], self.pos[1], 0.1)
-        #glRotatef(math.degrees(self.rot[2]),0,0,1)
-        #glRotatef(90.,0,0,1)
-        glCallList(self.carobj.gl_list)
+        glRotatef(math.degrees(self.rot[2]),0,0,1)
+        glRotatef(90.,0,0,1)
+        glCallList(self.carobj[viewname].gl_list)
         glPopMatrix()
+        self.olddraw()
     
     def olddraw(self):
         x = self.pos[0]
@@ -111,3 +113,4 @@ class Car(object):
         for vertex in points:
             glVertex3fv(vertex)
         glEnd()
+        

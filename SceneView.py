@@ -73,7 +73,7 @@ class SceneView(glcanvas.GLCanvas):
         #draw Cars
         #print self.name,'draw car'
         for car in self.carlist:
-            car.draw()
+            car.draw(self.name)
         #draw track
         self.track.draw()
         
