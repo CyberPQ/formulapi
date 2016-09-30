@@ -24,15 +24,15 @@ installer wxPython
 todo list:
 --------------
 
-    [] add lap time per car
-    [] add starter light
-    [] add track wall
-    [x] draw car in 3d
-    [] enhance track texture
-    [x] capture car view and send over tcp
-    [x] fix motor control from tcp
-    [] add collision detection
-    [x] add other car (multi car view)
+- [ ] add lap time per car
+- [ ] add starter light
+- [ ] add track wall
+- [X] draw car in 3d
+- [ ] enhance track texture
+- [X] capture car view and send over tcp
+- [X] fix motor control from tcp
+- [ ] add collision detection
+- [X] add other car (multi car view)
 
 
 collision for lap count:
