@@ -24,4 +24,4 @@ class TrackView(SceneView):
     
     def setpointofview(self):
         #5 au dessus du centre
-        gluLookAt(0,0,8,0,0,0,0,1,0)
+        gluLookAt(-1,2,5,-1,2,0,0,1,0)
