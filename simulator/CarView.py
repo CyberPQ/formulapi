@@ -14,8 +14,7 @@ class CarView(wx.Panel):
         self.name = name
         self.car = carlist[carnumber]
         self.glcanvas = CarGLCanvas(self, name, carlist, carnumber, size=(400, 200))
-        title = '%s - motor left:%.02f, right:%.02f' % (name, self.car.leftspeed, self.car.rightspeed)
-        self.title = wx.TextCtrl(self, value=title, style=wx.TE_READONLY)
+        self.title = wx.TextCtrl(self, value='\n\n', style=wx.TE_READONLY|wx.TE_MULTILINE|wx.TE_NO_VSCROLL)
         box = wx.BoxSizer(wx.VERTICAL)
         box.Add(self.title,0 , wx.EXPAND)
         box.Add(self.glcanvas)
@@ -27,6 +26,11 @@ class CarView(wx.Panel):
     def OnPaint(self, event=None):
         dc = wx.PaintDC(self)
         title = '%s - motor left:%.02f, right:%.02f' % (self.name, self.car.leftspeed, self.car.rightspeed)
+        title += '\n'
+        title += 'lap count: %d, last: %s\nbest: %s, worst: %s' % (self.car.laps['count'],
+                                                                                  self.car.laps['last'] or '-',
+                                                                                  self.car.laps['best'] or '-',
+                                                                                  self.car.laps['worst'] or '-')
         self.title.SetValue(title)
 
 

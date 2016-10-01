@@ -5,7 +5,7 @@ import math
 from math import pi, cos, sin, pow
 
 from Texture import Texture
-from Car import Car
+
 
 class Track(object):
     """La piste fait 10.3m (ligne droite) par 6.6m
@@ -15,7 +15,7 @@ class Track(object):
     """
     L1 = 10.3 * 1024/752.
     L2 = L1
-    H = -Car.hauteurcamera
+    H = 0
     terrain = ((-L1/2.,-L2/2.,H),(L1/2.,-L2/2.,H),(L1/2.,L2/2.,H),(-L1/2.,L2/2.,H))
     terrain = ((-10,-10,H),(10,-10,H),(10,10,H),(-10,10,H))
     terraintex = ((0.0, 0.0),(1.0, 0.0),(1.0, 1.0),(0.0, 1.0))
@@ -26,6 +26,7 @@ class Track(object):
     LANE_WIDTH = 0.3
     NB_LANE = 6
     LANE_COLOR = [GREEN, BLUE, GREEN, RED, BLUE, RED]
+    START_LINE = [(0,0), (0,-NB_LANE*LANE_WIDTH)]
 
     def __init__(self):
         self.texture = Texture('resources/piste2.png')
@@ -122,7 +123,7 @@ class Track(object):
                         glPushMatrix()
                         try:
                             glColor3fv(self.LANE_COLOR[lane])
-                            glTranslatef(x-dx,y-dy,-Car.hauteurcamera)
+                            glTranslatef(x-dx,y-dy,0)
                             gluPartialDisk(quad,inside_r,outside_r,32,32,angle,sweep)
                         finally:
                             glPopMatrix()
@@ -132,10 +133,10 @@ class Track(object):
                             try:
                                 glColor3fv((0,0,0))
                                 if lane == 0:  
-                                    glTranslatef(x-dx,y-dy,-Car.hauteurcamera)
+                                    glTranslatef(x-dx,y-dy,0)
                                     r = inside_r
                                 else:
-                                    glTranslatef(x-dx,y-dy,-Car.hauteurcamera)
+                                    glTranslatef(x-dx,y-dy,0)
                                     r = outside_r
                                 glScalef(1, 1, 0.2)
                                 self.drawcurvedwall(r, -current_angle, elt['sweep'])
@@ -151,7 +152,7 @@ class Track(object):
                         glPushMatrix()
                         try:
                             glColor3fv(self.LANE_COLOR[lane])
-                            glTranslatef(x-dx,y-dy,-Car.hauteurcamera)
+                            glTranslatef(x-dx,y-dy,0)
                             gluPartialDisk(quad,inside_r,outside_r,32,32,angle,sweep)
                         finally:
                             glPopMatrix()
@@ -163,10 +164,10 @@ class Track(object):
                                 dxx = dx - self.LANE_WIDTH*cos(current_angle-pi/2.)
                                 dyy = dy - self.LANE_WIDTH*sin(current_angle-pi/2.)
                                 if lane == 0:  
-                                    glTranslatef(x-dx,y-dy,-Car.hauteurcamera)
+                                    glTranslatef(x-dx,y-dy,0)
                                     r = inside_r + self.LANE_WIDTH
                                 else:
-                                    glTranslatef(x-dx,y-dy,-Car.hauteurcamera)
+                                    glTranslatef(x-dx,y-dy,0)
                                     r = outside_r - self.LANE_WIDTH
                                 glScalef(1, 1, 0.2)
                                 self.drawcurvedwall(r, -current_angle + pi/2., abs(elt['sweep']))
@@ -192,11 +193,11 @@ class Track(object):
                         try:
                             glColor3fv((0,0,0))
                             if lane == 0:  
-                                glTranslatef(x,y,-Car.hauteurcamera)
+                                glTranslatef(x,y,0)
                             else:
                                 glTranslatef(x+self.LANE_WIDTH*cos(current_angle+pi/2.),
                                              y+self.LANE_WIDTH*sin(current_angle+pi/2.),
-                                             -Car.hauteurcamera)
+                                             0)
                             glRotatef(angle,0,0,1)
                             glScalef(elt['L'], 1, 0.2)
                             self.drawwall()
@@ -207,7 +208,7 @@ class Track(object):
                     glPushMatrix()
                     try:
                         glColor3fv(self.LANE_COLOR[lane])
-                        glTranslatef(x,y,-Car.hauteurcamera)
+                        glTranslatef(x,y,0)
                         glRotatef(angle,0,0,1)
                         glScalef(elt['L'], self.LANE_WIDTH, 1)
                         self.drawrect()
