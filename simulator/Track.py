@@ -1,5 +1,6 @@
 from OpenGL.GL import *
 from OpenGL.GLU import *
+import numpy
 import math
 from math import pi, cos, sin, pow
 
@@ -28,7 +29,7 @@ class Track(object):
 
     def __init__(self):
         self.texture = Texture('resources/piste2.png')
-        self.quadric = {}
+        self.tracklist= {}
         self.trackelt=[
             {'type':'straight', 'L':5.4},
             {'type':'turn', 'L':0.7, 'sweep':math.radians(135)},
@@ -74,70 +75,115 @@ class Track(object):
         glVertex3f(1, 0, 1)
         glVertex3f(1, 0, 0)
         glEnd()
+
+    def drawcurvedwall(self, radius, start, sweep, split=16):
+        """ draw a curved surface a,b,c,d centre @ 0,0,0 """
+        pas = sweep / float(split)
+        old_b = 0
+        glBegin(GL_QUADS)
+        for i in range(split):
+            b = (radius*sin(start + pas*(i+1)),radius*cos(start + pas*(i+1)),0)
+            if i == 0:
+                a = (radius*sin(start + pas*i),radius*cos(start + pas*i),0)
+            else:
+                a = old_b
+            c = numpy.array(b,'f') + numpy.array((0,0,1),'f')
+            d = numpy.array(a, 'f') + numpy.array((0,0,1), 'f')
+            old_b = b
+            for v in (a,b,c,d):
+                glVertex3fv(v)
+        glEnd()
+
+
     
     def draw(self, viewname):
-        if not self.quadric.get(viewname,None):
-            self.quadric[viewname] = []
-            #create one quadric by turn by view
-            for elt in self.trackelt:
-                if elt['type'] == 'turn':
-                    quad = gluNewQuadric()
-                    gluQuadricDrawStyle(quad, GLU_FILL)
-                    self.quadric[viewname].append(quad)
-                else:
-                    self.quadric[viewname].append(None)
+        if not self.tracklist.get(viewname, None):
+            self.tracklist[viewname] = self.create_tracklist()
+        glCallList(self.tracklist[viewname])
 
+    def create_tracklist(self):
+        gllist = glGenLists(1)
+        glNewList(gllist, GL_COMPILE)
         for lane in range(self.NB_LANE):
             current_angle = -pi
             offsetlane = self.LANE_WIDTH*lane
             x,y = 0,-offsetlane
             for i, elt in enumerate(self.trackelt):
                 if elt['type'] == 'turn':
-                    glPushMatrix()
-                    glColor3fv(self.LANE_COLOR[lane])
-                    try:
-                        if elt['sweep'] > 0:
-                            angle = math.degrees(-current_angle)
-                            sweep = math.degrees(elt['sweep'])
-                            inside_r = elt['L'] / elt['sweep'] + offsetlane
-                            outside_r = inside_r + self.LANE_WIDTH
-                            dx = inside_r*cos(current_angle+pi/2.)
-                            dy = inside_r*sin(current_angle+pi/2.)
+                    quad = gluNewQuadric()
+                    gluQuadricDrawStyle(quad, GLU_FILL)
+                    if elt['sweep'] > 0:
+                        angle = math.degrees(-current_angle)
+                        sweep = math.degrees(elt['sweep'])
+                        inside_r = elt['L'] / elt['sweep'] + offsetlane
+                        outside_r = inside_r + self.LANE_WIDTH
+                        dx = inside_r*cos(current_angle+pi/2.)
+                        dy = inside_r*sin(current_angle+pi/2.)
+                        glPushMatrix()
+                        try:
+                            glColor3fv(self.LANE_COLOR[lane])
                             glTranslatef(x-dx,y-dy,-Car.hauteurcamera)
-                            gluPartialDisk(self.quadric[viewname][i],inside_r,outside_r,32,32,angle,sweep)
-                            # on calcule le changement de coordonnee pour un point a qui tourne de sweep a partir de current angle
-                            # les coordonnees ont pour origine le centre du cercle de rotation
-                            sweep = elt['sweep']
-                            xa = dx
-                            ya = dy
-                            xb = xa*cos(sweep) + ya*sin(sweep)
-                            yb = -xa*sin(sweep) + ya*cos(sweep)
-                            # on ajoute le deplacement par rapport au coordonnee initiale en corrigeant par rapport au centre du cercle de rotation
-                            x = x + (xb-xa)
-                            y = y + (yb-ya)
-                            current_angle -= elt['sweep']
-                        else:
-                            sweep = abs(math.degrees(elt['sweep']))
-                            angle = math.degrees(-current_angle + pi/2.)
-                            outside_r = elt['L'] / abs(elt['sweep']) - offsetlane
-                            inside_r = outside_r - self.LANE_WIDTH
-                            dx = outside_r*cos(current_angle-pi/2.)
-                            dy = outside_r*sin(current_angle-pi/2.)
+                            gluPartialDisk(quad,inside_r,outside_r,32,32,angle,sweep)
+                        finally:
+                            glPopMatrix()
+                        # draw wall
+                        if lane == 0 or lane == self.NB_LANE-1:
+                            glPushMatrix()
+                            try:
+                                glColor3fv((0,0,0))
+                                if lane == 0:  
+                                    glTranslatef(x-dx,y-dy,-Car.hauteurcamera)
+                                    r = inside_r
+                                else:
+                                    glTranslatef(x-dx,y-dy,-Car.hauteurcamera)
+                                    r = outside_r
+                                glScalef(1, 1, 0.2)
+                                self.drawcurvedwall(r, -current_angle, elt['sweep'])
+                            finally:
+                                glPopMatrix()
+                    else:
+                        sweep = abs(math.degrees(elt['sweep']))
+                        angle = math.degrees(-current_angle + pi/2.)
+                        outside_r = elt['L'] / abs(elt['sweep']) - offsetlane
+                        inside_r = outside_r - self.LANE_WIDTH
+                        dx = outside_r*cos(current_angle-pi/2.)
+                        dy = outside_r*sin(current_angle-pi/2.)
+                        glPushMatrix()
+                        try:
+                            glColor3fv(self.LANE_COLOR[lane])
                             glTranslatef(x-dx,y-dy,-Car.hauteurcamera)
-                            gluPartialDisk(self.quadric[viewname][i],inside_r,outside_r,32,32,angle,sweep)
-                            # on calcule le changement de coordonnee pour un point a qui tourne de sweep a partir de current angle
-                            # les coordonnees ont pour origine le centre du cercle de rotation
-                            sweep = elt['sweep']
-                            xa = dx
-                            ya = dy
-                            xb = xa*cos(sweep) + ya*sin(sweep)
-                            yb = -xa*sin(sweep) + ya*cos(sweep)
-                            # on ajoute le deplacement par rapport au coordonnee initiale en corrigeant par rapport au centre du cercle de rotation
-                            x = x + (xb-xa)
-                            y = y + (yb-ya)
-                            current_angle -= elt['sweep']
-                    finally:
-                        glPopMatrix()
+                            gluPartialDisk(quad,inside_r,outside_r,32,32,angle,sweep)
+                        finally:
+                            glPopMatrix()
+                        # draw wall
+                        if lane == 0 or lane == self.NB_LANE-1:
+                            glPushMatrix()
+                            try:
+                                glColor3fv((0,0,0))
+                                dxx = dx - self.LANE_WIDTH*cos(current_angle-pi/2.)
+                                dyy = dy - self.LANE_WIDTH*sin(current_angle-pi/2.)
+                                if lane == 0:  
+                                    glTranslatef(x-dx,y-dy,-Car.hauteurcamera)
+                                    r = inside_r + self.LANE_WIDTH
+                                else:
+                                    glTranslatef(x-dx,y-dy,-Car.hauteurcamera)
+                                    r = outside_r - self.LANE_WIDTH
+                                glScalef(1, 1, 0.2)
+                                self.drawcurvedwall(r, -current_angle + pi/2., abs(elt['sweep']))
+                            finally:
+                                glPopMatrix()
+
+                    #update coords
+                    # on calcule le changement de coordonnee pour un point a qui tourne de sweep a partir de current angle
+                    # les coordonnees ont pour origine le centre du cercle de rotation
+                    sweep = elt['sweep']
+                    xa = dx
+                    ya = dy
+                    xb = xa*cos(sweep) + ya*sin(sweep)
+                    yb = -xa*sin(sweep) + ya*cos(sweep)
+                    x += (xb-xa)
+                    y += (yb-ya)
+                    current_angle -= sweep
                 else:
                     angle = math.degrees(current_angle)
                     # draw wall
@@ -170,3 +216,5 @@ class Track(object):
                     # update coords
                     x += elt['L']*cos(current_angle)
                     y += elt['L']*sin(current_angle)
+        glEndList()
+        return gllist
