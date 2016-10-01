@@ -5,13 +5,34 @@ import math
 from OpenGL.GL import *
 from OpenGL.GLU import *
 from wx import glcanvas
-from SceneView import SceneView
+from SceneGLCanvas import SceneGLCanvas
 
-
-class CarView(SceneView):
-    def __init__(self, parent, carlist, carnumber):
+class CarView(wx.Panel):
+    def __init__(self, parent, carlist, carnumber, **kwargs):
+        wx.Panel.__init__(self, parent, -1, **kwargs)
         name = 'carview '+str(carnumber)
-        SceneView.__init__(self, parent, name, carlist)
+        self.name = name
+        self.car = carlist[carnumber]
+        self.glcanvas = CarGLCanvas(self, name, carlist, carnumber, size=(400, 200))
+        title = '%s - motor left:%.02f, right:%.02f' % (name, self.car.leftspeed, self.car.rightspeed)
+        self.title = wx.TextCtrl(self, value=title, style=wx.TE_READONLY)
+        box = wx.BoxSizer(wx.VERTICAL)
+        box.Add(self.title,0 , wx.EXPAND)
+        box.Add(self.glcanvas)
+        self.SetSizer(box)
+        box.Fit(self)
+
+        self.Bind(wx.EVT_PAINT, self.OnPaint)
+
+    def OnPaint(self, event=None):
+        dc = wx.PaintDC(self)
+        title = '%s - motor left:%.02f, right:%.02f' % (self.name, self.car.leftspeed, self.car.rightspeed)
+        self.title.SetValue(title)
+
+
+class CarGLCanvas(SceneGLCanvas):
+    def __init__(self, parent, name, carlist, carnumber, **kwargs):
+        SceneGLCanvas.__init__(self, parent, name, carlist, **kwargs)
         self.carnumber = carnumber
         self.car = self.carlist[self.carnumber]
         print self.name, 'car is', self.car

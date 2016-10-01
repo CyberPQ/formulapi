@@ -11,10 +11,11 @@ from wx.glcanvas import WX_GL_RGBA
 
 from Track import Track
 
-class SceneView(glcanvas.GLCanvas):
-    def __init__(self, parent, name, carlist):
+
+class SceneGLCanvas(glcanvas.GLCanvas):
+    def __init__(self, parent, name, carlist, **kwargs):
         attribs=[WX_GL_RGBA,WX_GL_DOUBLEBUFFER,WX_GL_SAMPLE_BUFFERS, GL_TRUE,WX_GL_DEPTH_SIZE,16,0,0]
-        glcanvas.GLCanvas.__init__(self, parent, -1, attribList=attribs)
+        glcanvas.GLCanvas.__init__(self, parent, -1, attribList=attribs, **kwargs)
         self.init = False
         self.ispovinit = False
         self.name = name

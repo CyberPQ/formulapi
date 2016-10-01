@@ -4,24 +4,29 @@ import sys
 from OpenGL.GL import *
 from OpenGL.GLU import *
 from wx import glcanvas
-from SceneView import SceneView
+from SceneGLCanvas import SceneGLCanvas
 from OpenGL.GLU import *
 from Track import Track
 
-class TrackView(SceneView):
-    def __init__(self, parent, carlist):
-        SceneView.__init__(self, parent, 'trackview', carlist)
 
-    def _initpov(self):
-        size = self.GetClientSize()
-        print self.name, 'init pov', size
-        glMatrixMode(GL_PROJECTION)
-        glLoadIdentity()
-        glOrtho(-15, 15, -15, 15, -2, 1)
-        glMatrixMode(GL_MODELVIEW)
-        glLoadIdentity()
-        self.ispovinit = True
+class TrackView(wx.Panel):
+    def __init__(self, parent, carlist, **kwargs):
+        wx.Panel.__init__(self, parent, -1, **kwargs)
+        name = 'trackview'
+        self.glcanvas = TrackGLCanvas(self, name, carlist, size=(400, 200))
+        self.title = wx.TextCtrl(self, value=name, style=wx.TE_READONLY)
+        box = wx.BoxSizer(wx.VERTICAL)
+        box.Add(self.title)
+        box.Add(self.glcanvas)
+        self.SetSizer(box)
+        box.Fit(self)
+
+
+
+class TrackGLCanvas(SceneGLCanvas):
+    def __init__(self, parent, name, carlist, **kwargs):
+        SceneGLCanvas.__init__(self, parent, name, carlist, **kwargs)
     
     def setpointofview(self):
         #5 au dessus du centre
-        gluLookAt(-1,2,5,-1,2,0,0,1,0)
+        gluLookAt(-3,1.5,5,-3,1.5,0,0,1,0)

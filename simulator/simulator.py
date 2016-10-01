@@ -40,23 +40,19 @@ import httpserver
 mycar = listcar[0]
 
 class MainPanel(wx.Panel):
-    def __init__(self, parent):
-        wx.Panel.__init__(self, parent, -1)
+    def __init__(self, parent, **kwargs):
+        wx.Panel.__init__(self, parent, -1, **kwargs)
 
         self.oldtime = time.time()
         self.viewbox = wx.WrapSizer()
-        #self.viewbox.Add((20, 30))
         #car views
         global listcar
         for i, car in enumerate(listcar):
             c = CarView(self, listcar, i)
-            c.SetMinSize((600, 400))
-            #c.Refresh()
             self.viewbox.Add(c, 0, wx.ALL, 1)
 
         #track view
         c = TrackView(self, listcar)
-        c.SetMinSize((600, 400))
         self.viewbox.Add(c, 0, wx.ALL, 1)
 
         self.SetAutoLayout(True)
@@ -99,13 +95,13 @@ class Simulator(wx.App):
         frame.Bind(wx.EVT_CHAR_HOOK, self.OnKey)
         self.mainwin = MainPanel(frame)
 
-        # set the frame to a good size for showing the two buttons
-        frame.SetSize((600*2,400*2))
+        # set the frame to a good size
         self.mainwin.SetFocus()
         self.window = self.mainwin
         frect = frame.GetRect()
 
         self.SetTopWindow(frame)
+        frame.Maximize(True)
         self.frame = frame
         return True
         
