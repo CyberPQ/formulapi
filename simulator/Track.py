@@ -27,7 +27,7 @@ class Track(object):
     LANE_COLOR = [GREEN, BLUE, GREEN, RED, BLUE, RED]
 
     def __init__(self):
-        self.texture = Texture('piste2.png')
+        self.texture = Texture('resources/piste2.png')
         self.quadric = {}
         self.trackelt=[
             {'type':'straight', 'L':5.4},
