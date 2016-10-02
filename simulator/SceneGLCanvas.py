@@ -4,11 +4,18 @@ import sys
 from OpenGL.GL import *
 from OpenGL.GLU import *
 from wx import glcanvas
+from wx.glcanvas import WX_GL_DEPTH_SIZE
+from wx.glcanvas import WX_GL_DOUBLEBUFFER
+from wx.glcanvas import WX_GL_SAMPLE_BUFFERS
+from wx.glcanvas import WX_GL_RGBA
+
 from Track import Track
 
-class SceneView(glcanvas.GLCanvas):
-    def __init__(self, parent, name, carlist):
-        glcanvas.GLCanvas.__init__(self, parent, -1)
+
+class SceneGLCanvas(glcanvas.GLCanvas):
+    def __init__(self, parent, name, carlist, **kwargs):
+        attribs=[WX_GL_RGBA,WX_GL_DOUBLEBUFFER,WX_GL_SAMPLE_BUFFERS, GL_TRUE,WX_GL_DEPTH_SIZE,16,0,0]
+        glcanvas.GLCanvas.__init__(self, parent, -1, attribList=attribs, **kwargs)
         self.init = False
         self.ispovinit = False
         self.name = name
@@ -27,6 +34,7 @@ class SceneView(glcanvas.GLCanvas):
         glClearColor(0.5,0.7,1, 1.0)
         glShadeModel(GL_SMOOTH)
         glEnable(GL_DEPTH_TEST)
+        glEnable(GL_MULTISAMPLE)
         self.track = Track()
         self.initpov()
 
