@@ -9,7 +9,6 @@ import socket
 
 class ImageProcessor(object):
     def __init__(self):
-        self.logger = logging.getLogger('formulapi')
         self.trackcurve = 0.
         self.angle = 0.
         self.trackoffset = None
@@ -27,76 +26,87 @@ class ImageProcessor(object):
     """We make ourselves a little function which will find the edges in a mask image:
     """
     @staticmethod
-    def _SweepLine(mask, y):
-        found = []
+    def _SweepLine(width, mask, y):
+        # le mask est binaire, 1 représente la couleur
+        found_color_other = []
+        found_other_color = []
         # Grab the line of interest
         line = mask[y, :]
         # Get numpy to give us a list of the positions where the line changes in value
-        changed = numpy.where(line[:-1] != line[1:])[0]
+        changed_other_color = numpy.where(line[:-1] < line[1:])[0]
+        changed_color_other = numpy.where(line[:-1] > line[1:])[0]
         # Remove changes too close to the edge of the image
-        for i in changed:
+        for i in changed_other_color:
             if i < 2:
                 pass
             elif i > (width - 3):
                 pass
             else:
-                found.append(i)
+                found_other_color.append(i)
+
+        for i in changed_color_other:
+            if i < 2:
+                pass
+            elif i > (width - 3):
+                pass
+            else:
+                found_color_other.append(i)
         # Return the found values
-        return found
+        return found_color_other, found_other_color
 
     # The values of try1, try2, try3 are used to attempt a match with target
     # Any matches are added to existing lists matched1, matched2, matched3
     # Any values which cannot be matched are added to the existing list unmatched
     @staticmethod
-    def _FindMatches(y, target, try1, try2, try3, matched1, matched2, matched3, unmatched):
-    """The function is fairly long but quite simple.
-    It takes a list of points to try and match and one or more lists to try and match it with.
-    Each point is then added to one of the matched lists, or is added to the unmatched list.
-    """
-    maxSeperation = int(width * 0.05)
-    # Loop over all the values in target:
-    while len(target) > 0:
-        # Remove the next value from the list of targets
-        xt = target.pop()
-        matched = False
-        # See if try1 can match it
-        if try1:
-            for x1 in try1:
-                if abs(x1 - xt) < maxSeperation:
-                    # Matched, work out the point and add it
-                    matched = True
-                    try1.remove(x1)
-                    x = (xt + x1) / 2
-                    matched1.append((x, y))
-                    break
-            if matched:
-                continue
-        # See if try2 can match it
-        if try2:
-            for x2 in try2:
-                if abs(x2 - xt) < maxSeperation:
-                    # Matched, work out the point and add it
-                    matched = True
-                    try2.remove(x2)
-                    x = (xt + x2) / 2
-                    matched2.append((x, y))
-                    break
-            if matched:
-                continue
-        # See if try3 can match it
-        if try3:
-            for x3 in try3:
-                if abs(x3 - xt) < maxSeperation:
-                    # Matched, work out the point and add it
-                    matched = True
-                    try3.remove(x3)
-                    x = (xt + x3) / 2
-                    matched3.append((x, y))
-                    break
-            if matched:
-                continue
-        # No matches
-        unmatched.append((xt, y))
+    def _FindMatches(width, y, target, try1, try2, try3, matched1, matched2, matched3, unmatched):
+        """The function is fairly long but quite simple.
+        It takes a list of points to try and match and one or more lists to try and match it with.
+        Each point is then added to one of the matched lists, or is added to the unmatched list.
+        """
+        maxSeperation = int(width * 0.05)
+        # Loop over all the values in target:
+        while len(target) > 0:
+            # Remove the next value from the list of targets
+            xt = target.pop()
+            matched = False
+            # See if try1 can match it
+            if try1:
+                for x1 in try1:
+                    if abs(x1 - xt) < maxSeperation:
+                        # Matched, work out the point and add it
+                        matched = True
+                        try1.remove(x1)
+                        x = (xt + x1) / 2
+                        matched1.append((x, y))
+                        break
+                if matched:
+                    continue
+            # See if try2 can match it
+            if try2:
+                for x2 in try2:
+                    if abs(x2 - xt) < maxSeperation:
+                        # Matched, work out the point and add it
+                        matched = True
+                        try2.remove(x2)
+                        x = (xt + x2) / 2
+                        matched2.append((x, y))
+                        break
+                if matched:
+                    continue
+            # See if try3 can match it
+            if try3:
+                for x3 in try3:
+                    if abs(x3 - xt) < maxSeperation:
+                        # Matched, work out the point and add it
+                        matched = True
+                        try3.remove(x3)
+                        x = (xt + x3) / 2
+                        matched3.append((x, y))
+                        break
+                if matched:
+                    continue
+            # No matches
+            unmatched.append((xt, y))
 
     """It would help a lot if we could see our points at this stage.
     We can make a quick function to draw a cross on the image like this
@@ -120,11 +130,10 @@ class ImageProcessor(object):
                 image.itemset((y, x, 1), g)
                 image.itemset((y, x, 2), r)
 
-    def ProcessingImage(self, rawimage, saveimages=False):
+    def ProcessingImage(self, image, saveimages=False):
         """
-        process raw image from camera
+        process image from camera
         """
-        self.logger.info('start processing')
         #What we want to do is known as cropping.
         #This is where we chop out the parts of the image we do not want.
         #In our image we do not need the top part.
@@ -136,7 +145,6 @@ class ImageProcessor(object):
         croppedheight = cropBottom - cropTop
         if saveimages:
             cv2.imwrite('cropped.jpg', cropped)
-        self.logger.info('croppedheight:', croppedheight)
 
         #Now we have removed the background we can try and find any walls.
         #Looking at the image they should be much darker than the rest of the track.
@@ -147,7 +155,6 @@ class ImageProcessor(object):
         walls = cv2.inRange(cropped, numpy.array((0, 0, 0)), numpy.array((wallB, wallG, wallR)))
         if saveimages:
             cv2.imwrite('walls.jpg', walls)
-        self.logger.info('end walls')
 
         #The walls are a bit untidy, we can remove some of the noise by using a filter.
         #We will use an erosion filter to reduce the mask slightly, this is cheap and will remove small areas of noise.
@@ -156,23 +163,23 @@ class ImageProcessor(object):
         walls = cv2.erode(walls, erodeKernel)
         if saveimages:
             cv2.imwrite('walls2.jpg', walls)
-        self.logger.info('walls2')
         #The larger erodeSize is, the more the edge of the wall is taken away.
         #Too large and the wall will be inaccurate, too small and we will see bits of "wall" in strange places.
 
         #The next step is to split the colour channels apart.
         blue, green, red = cv2.split(cropped)
-        cv2.imwrite('blue.jpg', blue)
-        cv2.imwrite('green.jpg', green)
-        cv2.imwrite('red.jpg', red)
-        self.logger.info('split')
+        if saveimages:
+            cv2.imwrite('blue.jpg', blue)
+            cv2.imwrite('green.jpg', green)
+            cv2.imwrite('red.jpg', red)
+
         #In each image the track of interest is bright compared to the others.
 
         #If we get the largest of the three channels we can compare them
         maxImage = numpy.maximum(numpy.maximum(blue, green), red)
         if saveimages:
             cv2.imwrite('max.jpg', maxImage)
-        self.logger.info('max')
+
         #The levels are not quite the same, but they are roughly correct.
         #We can do a bit better by adjusting the green and blue levels a bit:
         # Apply gains
@@ -190,7 +197,6 @@ class ImageProcessor(object):
         maxImage = numpy.maximum(numpy.maximum(blue, green), red)
         if saveimages:
             cv2.imwrite('max2.jpg', maxImage)
-        self.logger.info('max2')
 
         #Now we remove any areas which are not the highest from each image:
         red  [red   < maxImage] = 0
@@ -202,12 +208,9 @@ class ImageProcessor(object):
             cv2.imwrite('red2.jpg', red)
 
         #We can see this a bit clearer as a single image
-        self.logger.debug(red.shape, green.shape, blue.shape)
         merged = cv2.merge([blue, green, red])
-        self.logger.debug(merged.shape)
         if saveimages:
             cv2.imwrite('merged.jpg', merged)
-        self.logger.info('merged')
 
         """What we want to do is 'scan' along the image in many places and find the outsides of the three colours.
         Before we can do that they need to be simplified to True or False arrays.
@@ -236,8 +239,6 @@ class ImageProcessor(object):
             position = int(position)
             
             scanLines.append(position)
-        # Show the list of positions
-        self.logger.debug(scanLines)
 
         """We can better illustrate where these lines are by drawing them.
         We do this by making a brand new image the same size as the cropped one.
@@ -269,25 +270,28 @@ class ImageProcessor(object):
         Keep all the matches in the same list for all of the lines
         """
         # Make our matched lists
-        matchRG = []
+        matchWR = []
         matchRB = []
-        matchRW = []
+        matchBR = []
+        matchRG = []
         matchGB = []
+        matchBG = []
         matchGW = []
         unmatched = []
         # Loop over each line
         for y in scanLines:
             # Scan the masks
-            edgeR = self._SweepLine(red,   y)
-            edgeG = self._SweepLine(green, y)
-            edgeB = self._SweepLine(blue,  y)
-            edgeW = self._SweepLine(walls, y)
+            edge_Ro, edge_oR = self._SweepLine(width, red,   y)
+            edge_Go, edge_oG = self._SweepLine(width, green, y)
+            edge_Bo, edge_oB = self._SweepLine(width, blue,  y)
+            edge_Wo, edge_oW = self._SweepLine(width, walls, y)
             # Do the matching
-            self._FindMatches(y, edgeR, edgeG, edgeB, edgeW, matchRG, matchRB, matchRW, unmatched)
-            self._FindMatches(y, edgeG, edgeB, edgeW, None, matchGB, matchGW, None, unmatched)
+            self._FindMatches(width, y, edge_Ro, edge_oG, edge_oB, None, matchRG, matchRB, None, unmatched)
+            self._FindMatches(width, y, edge_Go, edge_oB, edge_oW, None, matchGB, matchGW, None, unmatched)
+            self._FindMatches(width, y, edge_Bo, edge_oR, edge_oG, None, matchBR, matchBG, None, unmatched)
+            self._FindMatches(width, y, edge_Wo, edge_Ro, None, None,    matchWR, None, None, unmatched)
             # Add any left over points to the unmatched list
-            others = edgeB[:]
-            others.extend(edgeW)
+            others = edge_oR[:] + edge_oG[:] + edge_oB[:] + edge_oW[:]
             for x in others:
                 unmatched.append((x, y))
 
@@ -323,7 +327,7 @@ class ImageProcessor(object):
             cv2.imwrite('points2.jpg', pointImage)
 
         #From the end of previous part we package up the matched points into a list of lists like this
-        lines = [matchRW, matchRB, matchRG, matchGB, matchGW]
+        lines = [matchWR, matchRB, matchBR, matchRG, matchGB, matchBG, matchGW]
 
         """The first thing we do is pick a line to work with.
         While it would be more accurate to use as much data as possible, it is quicker to use a single line.
@@ -344,15 +348,15 @@ class ImageProcessor(object):
         """
         lineIndexToOffset = {
             0 : +3.0,
-            1 : +1.0,
-            2 :  0.0,
-            3 : -1.0,
-            4 : -3.0
+            1 : +2.0,
+            2 : +1.0,
+            3 :  0.0,
+            4 : -1.0,
+            5 : -2.0,
+            6 : -3.0
         }
         lineOffset = lineIndexToOffset[index]
         bestLine = lines[index]
-        self.logger.debug('bestLine at index %d:' % index, bestLine)
-
 
         r"""There are a few different ways of approaching this problem.
         Two good ways are:
@@ -370,6 +374,8 @@ class ImageProcessor(object):
         """The next thing to do is find the point closest to this target.
         This is very similar to the search for the best line to use
         """
+        if len(bestLine) == 0:
+            return
         offsetIndex = 0
         offsetErrorY = abs(targetY - bestLine[0][1])
         for i in range(len(bestLine)):
@@ -392,7 +398,6 @@ class ImageProcessor(object):
 
         #We can compute the full track offset by summing the offset of the line from center with the offset from the line
         self.trackoffset = lineOffset + offsetX
-        self.logger.debug('trackOffset:', trackOffset)
 
         """
         We can measure this by comparing how far apart each point is in X verses Y compared to the one before it.
@@ -405,7 +410,6 @@ class ImageProcessor(object):
             if dY:
                 dXdY.append((dX, dY))
 
-        self.logger.debug('dxdy:', dXdY)
         """
         To work out the amount the angle the line is at we need to divide dX by dY.
         For example if X is always the same (dX = 0) and Y changes by 10 each time (dY = 10) then dX ÷ dY = 0, in other words 0°.
@@ -435,7 +439,6 @@ class ImageProcessor(object):
         correction = correctionFactor * offsetX
         gradient -= correction
         self.angle = math.atan(gradient) * 180 / math.pi
-        self.logger.debug('angle:', angle)
 
         """
         We still need these to calculate our track curvature value
@@ -463,7 +466,7 @@ class ImageProcessor(object):
             lastG = nextG
         gradient2 /= len(dXdY)
         self.trackcurve = gradient2
-        self.logger.debug('track curve',gradient2)
+
 
 
 

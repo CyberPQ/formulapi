@@ -6,7 +6,14 @@ import cv2
 
 from Formula import CarControl
 
-carcontrol = CarControl()    
+
+format = '[%(filename)s:%(lineno)s - %(funcName)20s() ] %(asctime)-15s %(message)s'
+logging.basicConfig(format=format)
+logger = logging.getLogger('formulapi')
+logger.setLevel(logging.DEBUG)
+
+carcontrol = CarControl(0)
+carcontrol.Start()
 
 #Camera processing results
 def CurrentTrackPosition():
@@ -14,7 +21,7 @@ def CurrentTrackPosition():
     Where the YetiBorg is across the track.
     Values range from +3 for the outside wall to -3 for the inside wall, the center of the track is 0.
     """
-    return processing.CurrentTrackPosition()
+    return carcontrol.CurrentTrackPosition()
 
 
 def TrackFound():
@@ -22,7 +29,7 @@ def TrackFound():
     Use this to check if the YetiBorg can see the track, True for when it can be seen, False for when it cannot be seen.
     The calls below are only valid if True.
     """
-    return processing.TrackFound()
+    return carcontrol.TrackFound()
 
 
 def AimForLane(position):
@@ -31,7 +38,7 @@ def AimForLane(position):
     Values range from +3 for the outside wall to -3 for the inside wall.
     Center of the track is 0, we recommend staying between +2.5 and -2.5 to avoid driving into the wall itself.
     """
-    raise NotImplementedError()
+    carcontrol.AimForLane(position)
 
 def WaitForWaypoint(waypoint):
     """
@@ -53,7 +60,7 @@ def CurrentAngle():
     Values range from +90 for facing the outside wall to -90 for facing the inside wall.
     0 means we are driving parallel to the track.
     """
-    return processing.CurrentAngle()
+    return carcontrol.CurrentAngle()
 
 def TrackCurve():
     """
@@ -81,6 +88,7 @@ def WaitForGo():
     """
     #TODO
     time.sleep(2)
+    carcontrol.racestarted = True
 
 def Speed(value):
     """
@@ -102,7 +110,7 @@ def LapCount():
     Read the current number of completed laps.
     Useful to know if you have finished the race or not
     """
-    raise NotImplementedError()
+    return carcontrol.LapCount()
 
 def FinishRace():
     """
@@ -110,7 +118,6 @@ def FinishRace():
     This will also control the LED on the ZeroBorg to indicate the YetiBorg has finished
     """
     carcontrol.Stop()
-
 
 
 def GetDistance():
@@ -153,19 +160,13 @@ def StartUserLog():
     """
     Begins recording a log of what commands are given to the auto-drive system from the script.
     """
-    format = '%(asctime)-15s %(message)s'
-    logging.basicConfig(format=format)
-    logger = logging.getLogger('formulapi')
-    logger.setLevel(logging.INFO)
+    pass
 
 def StartDetailedLog():
     """
     Begins recording a log of what the various parts of the auto-drive system are doing.
     """
-    format = '[%(filename)s:%(lineno)s - %(funcName)20s() ] %(asctime)-15s %(message)s'
-    logging.basicConfig(format=format)
-    logger = logging.getLogger('formulapi')
-    logger.setLevel(logging.DEBUG)
+    pass
 
 
 def EndUserLog():
