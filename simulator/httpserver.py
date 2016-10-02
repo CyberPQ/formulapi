@@ -42,9 +42,17 @@ class MyTCPHandler(SocketServer.BaseRequestHandler):
         # self.request is the TCP socket connected to the client
         while True:
             self.data = self.request.recv(1024).strip()
+            if not self.data:
+                break
             command = self.data.split()
+            if len(command) < 2:
+                    print 'incorrect command:', command, self.data
+                    continue
+            carnum = int(command[1])
+            if not 0 <= carnum < len(listcar):
+                print 'incorrect command:', command, self.data
+                continue
             if command[0] == 'capture':
-                carnum = int(command[1])
                 car = listcar[carnum]
                 print datetime.datetime.now(),'start capture', carnum
                 car.cameraimg.capture = True
@@ -68,6 +76,9 @@ class MyTCPHandler(SocketServer.BaseRequestHandler):
                 print datetime.datetime.now(),'fin capture'
             
             elif command[0] == 'motor':
+                if len(command) != 4:
+                    print 'incorrect command:', command, self.data
+                    continue
                 carnum = int(command[1])
                 car = listcar[carnum]
                 car.set_speed(float(command[2]), float(command[3]))
