@@ -77,7 +77,7 @@ class Track(object):
             current_angle = -pi
             x,y = 0,0
             for i, elt in enumerate(self.trackelt):
-                print 'x,y,angle',x,y,math.degrees(current_angle)
+                #print 'x,y,angle',x,y,math.degrees(current_angle)
                 glPushMatrix()
                 glColor3fv(self.LANE_COLOR[lane])
                 if elt['type'] == 'turn':
