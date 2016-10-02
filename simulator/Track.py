@@ -26,7 +26,7 @@ class Track(object):
     LANE_WIDTH = 0.3
     NB_LANE = 6
     LANE_COLOR = [GREEN, BLUE, GREEN, RED, BLUE, RED]
-    START_LINE = [(0,0), (0,-NB_LANE*LANE_WIDTH)]
+    START_LINE = [(0,0.5), (0,-NB_LANE*LANE_WIDTH -0.5)]
 
     def __init__(self):
         self.texture = Texture('resources/piste2.png')
