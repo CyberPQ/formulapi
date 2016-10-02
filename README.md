@@ -13,7 +13,7 @@ install wxPython from https://wxpython.org/download.php#msw (choose 32 or 64 bit
 install standard librairies
 
 	pip install numpy
-	pip install pillox
+	pip install pillow
 
 install these .whl files for 64 bits:
 
