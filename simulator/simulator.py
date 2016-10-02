@@ -137,7 +137,7 @@ class Simulator(wx.App):
             evt.Skip()
 
 if __name__ == '__main__':
-    HOST, PORT = "localhost", 8000
+    HOST, PORT = "", 8000
     #server = BaseHTTPServer.HTTPServer((HOST, PORT), httpserver.RequestHandler)
     server = SocketServer.TCPServer((HOST, PORT), httpserver.MyTCPHandler)
     # Start a thread with the server -- that thread will then start one
