@@ -30,8 +30,8 @@ class Car(object):
         #motor speed
         self.leftspeed = .0
         self.rightspeed = .0
-        self.pos = [0,0,self.hauteurcamera]
-        self.rot = [0,0,0]
+        self.pos = [-0.1,-(num+1)*Track.LANE_WIDTH,self.hauteurcamera]
+        self.rot = [0,0,math.pi]
         self.cameraimg = CameraImage()
         self.carobj = {}
         self.num = num
@@ -95,7 +95,7 @@ class Car(object):
         if fdotp != 0:
             h = numpy.dot(a-c, p) / fdotp
             i = c + h*f
-            if h <= 1 and h >= 0 and b[0]<=i[0]<=a[0] and b[1]<=i[1]<=a[1] :
+            if h <= 1 and h >= 0 and b[1]<=i[1]<=a[1] :
                 #intersection, TODO: fix date with intersection point
                 current_time = datetime.datetime.now()
                 self.laps['count'] += 1
