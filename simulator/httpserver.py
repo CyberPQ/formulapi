@@ -59,7 +59,7 @@ class MyTCPHandler(SocketServer.BaseRequestHandler):
                 while car.cameraimg.capture:
                     time.sleep(0.01)
                 # Send the html message
-                img = Image.fromstring(car.cameraimg.mode, (car.cameraimg.width,car.cameraimg.height), car.cameraimg.data.tostring())
+                img = Image.frombytes(car.cameraimg.mode, (car.cameraimg.width,car.cameraimg.height), car.cameraimg.data.tostring())
                 img = img.transpose( Image.FLIP_TOP_BOTTOM)
                 pseudofile = StringIO()
                 print datetime.datetime.now(),'start png'
